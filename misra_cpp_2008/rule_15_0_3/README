@@ -1,0 +1,7 @@
+MISRA C++ 2008 Rule 15.0.3
+Control shall not be transferred into a try or catch block using a goto or a switch statement.
+
+We reuse the following clang diagnostics
+
+1. `note_protected_by_cxx_try`: jump bypasses initialization of try block
+2. `note_protected_by_cxx_catch`: jump bypasses initialization of catch block

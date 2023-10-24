@@ -1,0 +1,24 @@
+SCRIPTS_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
+ROOT := $(abspath $(SCRIPTS_DIR)..)
+OUT := $(ROOT)/out
+
+export GOPATH := $(OUT)
+PATH := $(OUT)/bin:$(PATH)
+PROTOC := $(OUT)/bin/protoc
+ifeq ($(shell uname -sm),Darwin arm64)
+	PROTOC := $(OUT)/bin/darwin_arm64_protoc
+endif
+
+PWD := $(shell pwd)
+
+protoc = $(PROTOC) -I$(ROOT) \
+      -I$(ROOT)/third_party/github.com/protocolbuffers/protobuf/src \
+      --go_out=$(ROOT) $(PWD)/$(1)
+
+NODENAME := $(shell uname -n)
+ifeq ($(NODENAME),lhw13)
+BAZEL_OPTS := --config=lhw13
+else
+BAZEL_OPTS :=
+endif

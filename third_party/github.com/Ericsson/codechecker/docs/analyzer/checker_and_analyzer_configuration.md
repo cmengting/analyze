@@ -1,0 +1,193 @@
+# Configure Clang Static Analyzer and checkers
+
+## Analyzer Configuration <a name="analyzer-configuration"></a>
+
+The analysis can be configured using analyzer wide configuration parameters.
+These parameters may have effect on the whole analysis, affecting the result of
+all checkers.
+
+Listing the available configuration options:
+`CodeChecker analyzers --analyzer-config clangsa --details`
+
+Setting analyzer configuration opions:
+`CodeChecker analyze --analyzer-config <key=value>`
+
+You can find a comprehensive list of analyzer configuration options at the
+[clang static analyzer
+documentation](https://github.com/llvm-mirror/clang/tree/master/docs) pages.
+
+## Checker Configuration <a name="checker-configuration"></a>
+
+Clang Static Analyzer checkers can be enabled and disabled using the
+`CodeChekcer analyze --enable <checker_name> --disable <checker_name>` flags.
+You can list/enable/disable all checkers for Clang Static Analyzer, except for
+the developer (debug and modeling) checkers.
+
+Some checkers can be customized using checker specific configuration options.
+
+These can be listed using the `CodeChecker checkers --checker-config` command
+and can be set by `CodeChecker analyze --checker-config
+clangsa:<option-name>=<value>`.
+
+You can find the documentation of the configuration options at hte [Clang Static
+Analyzer
+checkers](https://github.com/llvm-mirror/clang/tree/master/lib/StaticAnalyzer/Checkers)
+page.
+
+## Clang Static Analyzer Special Configuration Options
+In special cases, when the checker and analyzer configurability that is provided
+by CodeChecker is not enough, the Clang Static analyzer configuration can be
+extended through the `--saargs` analysis option. The content of the saargs file
+are forwarded as arguments without modification to the Clang Static Analyzer:
+```
+CodeChecker analyze --saargs static_analyzer.cfg
+```
+
+In the `static_analyzer.cfg` file various static analyzer and checker related
+configuration options can be configured like this:
+```
+-Xclang -analyzer-config -Xclang unix.Malloc:Optimistic=true -Xclang -analyzer-max-loop -Xclang 20
+```
+__Before every configuration option '-Xclang' argument should be written and
+all the configuration options sould be in one line! __
+
+In the `static_analyzer.cfg` example file we set a checker specific
+configuration option `unix.Malloc:Optimistic=true` for the `unix.Malloc`
+checker and a static analyzer configuration option `analyzer-max-loop` (the
+maximum number of times the analyzer will go through a loop, the default
+value is 4).
+
+### Enabling developer checkers
+You cannot enable/disable developer checkers in CodeChecker using the `--enable`
+or `--disable` flags.
+
+These (debug and modeling) checkers should not be used normally. They are
+typically used by ClangSA developers debug the analysis or to write test cases.
+These checkers can be listed by `clang -cc1 -analyzer-checker-help-developer`.
+
+If they are needed, they can be switched on using the following command
+`CodeChecker analyzer --saarg saarg.config`, where the content of saarg.config
+is for example `-Xclang -analyzer-checker=debug.ExprInspection`.
+
+## Z3 Theorem Prover
+The static analyzer supports using the
+[Z3 Theorem Prover](https://github.com/Z3Prover/z3) from Microsoft Research as
+an external constraint solver. This allows reasoning over more complex queries,
+but performance is `~15x` slower than the default range-based constraint
+solver. To enable the Z3 solver backend, Clang must be built with the
+`CLANG_ANALYZER_BUILD_Z3=ON` option, and the
+`-Xanalyzer -analyzer-constraints=z3` arguments passed at runtime. CodeChecker
+will automatically detect that the Clang was built with this option and you
+don't have to pass these arguments to the analyzer command itself when using
+CodeChecker, you just have to run the CodeChecker analyze command with the
+`--z3` option.
+
+You can read more about Z3 Theorem Prover
+[here](https://github.com/Z3Prover/z3/wiki).
+
+## Use Z3 SMT Solver to validate reports
+Z3 SMT Solver can reduce the number of false positive bugs reported to the user
+by the Clang Static Analyzer (CSA), without introducing too much overhead to
+the analysis.
+
+The bug refutation in the static analyzer is disabled by default and it’s
+hidden behind the flag `--crosscheck-with-z3`. Once the user has a version of
+clang built with Z3, the bug refutation can be enabled by passing
+`--analyzer-config clangsa:crosscheck-with-z3=true` when calling the clang static
+analyzer. CodeChecker will automatically detect that the Clang was built with
+this option and you don't have to pass these arguments to the analyzer command
+itself when using CodeChecker, you just have to run the CodeChecker analyze
+command with the `--z3-refutation` option.
+
+You can read more about refutation with the Z3 SMT Solver
+[here](https://docs.google.com/document/d/1-HEblH92VxdxDp04vDKjFa4_ZL9l2oPVLFtQUfLKSOo/).
+
+# Configuring Clang-Tidy
+
+## Configuring the analyzer and checkers
+
+You can configure the clang-tidy analyzer and its checkers through CodeChecker
+with the `--analyzer-config` and the `--checker-config` flags of `CodeChecker
+analyze/check` commands as described in sections [Analyzer
+Configuration](#analyzer-configuration) and [Checker
+Configuration](#checker-configuration).
+
+
+## Using Clang-Tidy configuration files
+
+If you want to control the configuration of clang-tidy from the `.clang-tidy`
+configuration files (instead of the CodeChecker command line)  you can use the
+`clang-tidy:take-config-from-directory=true` option. It will skip setting the
+checkers and checker configuration from CodeChecker (even if a profile was
+specified).
+
+Then __clang-tidy__ will attempt to read configuration for each analyzed source file
+from a `.clang-tidy` file located in the closest parent directory of the
+analyzed source file.
+
+So by executing `CodeChecker analyze compile_commands.json -o ./reports --analyzer-config 'clang-tidy:take-config-from-directory=true'`, CodeChecker will generate a clang-tidy command which will NOT 
+contain the -checks option at all so your .clang-tidy file will take precedence.
+
+The `.clang-tidy` configuration file can be in JSON or YAML format.
+
+JSON:
+```json
+{
+  "Checks": "clang-diagnostic-*,clang-analyzer-*",
+  "WarningsAsErrors": "",
+  "HeaderFilterRegex": "",
+  "AnalyzeTemporaryDtors": false,
+  "CheckOptions": [
+    {
+      "key": "google-readability-braces-around-statements.ShortStatementLines",
+      "value": "1"
+    },
+    {
+      "key": "modernize-loop-convert.MaxCopySize",
+      "value": "16"
+    },
+    {
+      "key": "modernize-loop-convert.NamingStyle",
+      "value": "CamelCase"
+    },
+    {
+      "key": "modernize-use-nullptr.NullMacros",
+      "value": "NULL"
+    }
+  ]
+}
+```
+
+or the same configuration in YAML format:
+
+```yaml
+---
+Checks:          'clang-diagnostic-*,clang-analyzer-*'
+WarningsAsErrors: ''
+HeaderFilterRegex: ''
+AnalyzeTemporaryDtors: false
+CheckOptions:
+  - key:             google-readability-braces-around-statements.ShortStatementLines
+    value:           '1'
+  - key:             modernize-loop-convert.MaxCopySize
+    value:           '16'
+  - key:             modernize-loop-convert.NamingStyle
+    value:           CamelCase
+  - key:             modernize-use-nullptr.NullMacros
+    value:           'NULL'
+...
+```
+
+## Using tidyargs option in CodeChecker
+
+The `--tidyargs` analysis argument can be used to forward configuration options
+through CodeChecker to the clang-tidy analyzer.
+```
+CodeChecker analyze --tidyargs tidy_analyzer.cfg
+```
+Where the ```tidy_analyzer.cfg``` config file content looks like this where the
+configuration arguments (json in this case) should be in one line :
+
+```
+-config="{ "Checks": "clang-diagnostic-*,clang-analyzer-*", "WarningsAsErrors": "", "HeaderFilterRegex": "", "AnalyzeTemporaryDtors": false, "CheckOptions": [ { "key": "google-readability-braces-around-statements.ShortStatementLines", "value": "1" }, { "key": "modernize-loop-convert.MaxCopySize", "value": "16" }, { "key": "modernize-loop-convert.NamingStyle", "value": "CamelCase" }, { "key": "modernize-use-nullptr.NullMacros", "value": "NULL" } ] }"
+```

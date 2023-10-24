@@ -1,0 +1,5 @@
+When compiling with clang, "error: expected expression" may be encoutered.
+
+This is because clang++ by default compiles your code using ISO C++ 1998 standard (including the defects addressed in the ISO C++ 2003 standard) except for 'export' (which has been removed in C++11)
+
+Lambdas are part of Clang's C++11 Language Extension, therefore you need to compile your code with -std=c++11 or -std=gnu++11

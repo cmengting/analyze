@@ -1,0 +1,28 @@
+/*
+Copyright 2022 Naive Systems Ltd.
+
+This software contains information and intellectual property that is
+confidential and proprietary to Naive Systems Ltd. and its affiliates.
+*/
+
+syntax = "proto3";
+package analyzer.proto;
+
+option go_package = "analyzer/proto";
+
+message Suppression {
+  // Path of the source file of this suppression.
+  string path = 1;
+  // Line number in the source file of this suppression.
+  int32 line_number = 2;
+  // The first 16 characters after processing the source code of
+  // this suppression with sha1.
+  string content = 3;
+  // The rule code of this suppression
+  string rule_code = 4;
+}
+
+// A list of sppressions.
+message SuppressionsList {
+  repeated Suppression suppressions = 1;
+}

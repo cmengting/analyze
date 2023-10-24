@@ -1,0 +1,152 @@
+We decide to add a missing exception in MISRA CPP 2008 standard, if we just
+want to follow the c++ standard in the other parts.
+
+The signedness of the result of an arithmetic operator should be the same as the
+original operands before integral promotion.
+
+Assume all the following code snippets have the following variable declarations:
+
+```cpp
+int8_t s8; // a.k.a char
+uint8_t u8; // a.k.a unsigned char
+int32_t s32; // a.k.a int
+uint32_t u32; // a.k.a unsigned int
+```
+
+in our standard, we have
+
+```
+uint8_t + uint8_t = uint8_t
+uint16_t + uint16_t = uint16_t
+uint32_t + uint32_t = uint32_t
+```
+
+but in c++ standard, they have
+
+```
+uint8_t + uint8_t = int32_t
+uint16_t + uint16_t = int32_t
+uint32_t + uint32_t = uint32_t
+```
+
+
+Some corner cases we need to consider:
+
+1. special good case
+
+```cpp
+u8 = u8 + u8;
+```
+
+AST:
+
+```
+BinaryOperator <line:4:3, col:13> 'unsigned char' lvalue '='
+|-DeclRefExpr <col:3> 'unsigned char' lvalue Var 0x561eb3fb8d18 'u8' 'unsigned char'
+`-ImplicitCastExpr <col:8, col:13> 'unsigned char' <IntegralCast>
+  `-BinaryOperator <col:8, col:13> 'int' '+'
+    |-ImplicitCastExpr <col:8> 'int' <IntegralCast>
+    | `-ImplicitCastExpr <col:8> 'unsigned char' <LValueToRValue>
+    |   `-DeclRefExpr <col:8> 'unsigned char' lvalue Var 0x561eb3fb8d18 'u8' 'unsigned char'
+    `-ImplicitCastExpr <col:13> 'int' <IntegralCast>
+      `-ImplicitCastExpr <col:13> 'unsigned char' <LValueToRValue>
+        `-DeclRefExpr <col:13> 'unsigned char' lvalue Var 0x561eb3fb8d18 'u8' 'unsigned char'
+```
+
+Actual explicit conversion version:
+
+```cpp
+u8 = (
+    static_cast<unsigned char>( // implicit conversion (should be ignored)
+        static_cast<int>( // integral promotion (should be ignored)
+            u8
+        )
+        +
+        static_cast<int>( // integral promotion (should be ignored)
+            u8
+        )
+    )
+);
+```
+
+Expected explicit conversion version:
+
+```cpp
+u8 = u8 + u8;
+```
+
+2. special bad case
+
+```cpp
+s32 = u8 + u8 + s32;
+```
+
+AST:
+
+```
+BinaryOperator <line:4:3, col:19> 'int' lvalue '='
+|-DeclRefExpr <col:3> 'int' lvalue Var 0x5640d382ac60 's32' 'int'
+`-BinaryOperator <col:9, col:19> 'int' '+'
+  |-BinaryOperator <col:9, col:14> 'int' '+'
+  | |-ImplicitCastExpr <col:9> 'int' <IntegralCast>
+  | | `-ImplicitCastExpr <col:9> 'unsigned char' <LValueToRValue>
+  | |   `-DeclRefExpr <col:9> 'unsigned char' lvalue Var 0x5640d382ad18 'u8' 'unsigned char'
+  | `-ImplicitCastExpr <col:14> 'int' <IntegralCast>
+  |   `-ImplicitCastExpr <col:14> 'unsigned char' <LValueToRValue>
+  |     `-DeclRefExpr <col:14> 'unsigned char' lvalue Var 0x5640d382ad18 'u8' 'unsigned char'
+  `-ImplicitCastExpr <col:19> 'int' <LValueToRValue>
+    `-DeclRefExpr <col:19> 'int' lvalue Var 0x5640d382ac60 's32' 'int'
+```
+
+Explicit conversion version:
+
+```cpp
+s32 = (
+    ( // should be unsigned type according to our rule
+      // therefore a unsigned to signed implicit conversion is applied here
+        static_cast<int>(u8) + static_cast<int>(u8)
+    )
+    +
+    s32
+);
+```
+
+Expected explicit conversion version:
+
+```cpp
+s32 = static_cast<int>(u8 + u8) + s32;
+```
+
+3. special bad case
+
+```cpp
+void foo(int);
+void foo(unsigned char);
+
+foo(u8 + u8);
+```
+
+expected result: `void foo(unsigned char)` is called.
+actual result: `void foo(int)` is called.
+
+How to implement:
+
+according to https://en.cppreference.com/w/cpp/language/implicit_conversion
+
+Implicit conversions are performed whenever an expression of some type T1 is used in context that does not accept that type, but accepts some other type T2; in particular:
+1. when the expression is used as the argument when calling a function that is declared with T2 as parameter;
+2. when the expression is used as an operand with an operator that expects T2;
+3. when initializing a new object of type T2, including return statement in a function returning T2;
+4. when the expression is used in a switch statement (T2 is integral type);
+5. when the expression is used in an if statement or a loop (T2 is bool).
+
+4 and 5 can be ignored as only integral promotion happens in 4 and no signedness change happens in 5.
+
+Integral promotion only happens in arithmetic operator. And in a complicated AST which contains multiple implicit conversions, if one of them has a different src and dst signedness, our checker should report it. So we can only consider the src and dst type in each implicit conversion individually, no recursion is needed!
+
+We can simplify the strategy as follows:
+1. Match that 3 kinds of implicit conversion
+2. Store the expected signedness of the destination type
+3. Check the matched node to see whether its child is an arithmetic operator. If false, which means the signedness in AST can be used, check the signedness of source type using `getType`, and we are done.
+4. If true, check whether integral promotion will happen in the arithmetic operator. i.e. both operand has type not smaller than int/unsigned int. If integral promotion will not happen, we are done.
+5. If integral promotion will happen, visit the arithmetic operator node to get its dst type, without integral promotion, and compare the dst and src type.

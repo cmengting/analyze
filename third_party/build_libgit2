@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -eux
+
+build_libgit2() {
+	cd "$(dirname "${BASH_SOURCE[0]}")/../out"
+	local install_prefix="$(pwd)"
+	mkdir -p build_libgit2
+	cd build_libgit2
+
+	export CC=clang
+	cmake "../../third_party/github.com/libgit2/libgit2" \
+		-DCMAKE_INSTALL_PREFIX="${install_prefix}" \
+		-DCMAKE_INSTALL_LIBDIR="lib" \
+		-DTHREADSAFE=ON \
+		-DUSE_SSH=OFF \
+		-DUSE_HTTPS=OFF \
+		-DUSE_NTLMCLIENT=OFF \
+		-DUSE_ICONV=OFF \
+		-DUSE_BUNDLED_ZLIB=ON \
+		-DUSE_HTTP_PARSER=builtin \
+		-DDEPRECATE_HARD=ON \
+		-DREGEX_BACKEND=builtin \
+		-DBUILD_CLAR=OFF \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCMAKE_BUILD_TYPE="RelWithDebInfo" \
+		-DCMAKE_C_FLAGS="-fPIC"
+	cmake --build . --target install
+}
+
+build_libgit2 "$@"

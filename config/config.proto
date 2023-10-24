@@ -1,0 +1,185 @@
+/*
+Copyright 2022 Naive Systems Ltd.
+
+This software contains information and intellectual property that is
+confidential and proprietary to Naive Systems Ltd. and its affiliates.
+*/
+
+syntax = "proto3";
+package config;
+
+option go_package = "config/configpb";
+
+message Configuration {
+  // Use this key to communicate with redmine
+  string support_user_api_key = 1;
+  // The absolute path of a working directory for scanner.
+  string scanner_working_directory = 3;
+  // The absolute path of a directory where the managed git repository will
+  // be cloned.
+  string local_mirror_path = 4;
+  // The absolute path of a working directory for issuepolicy.
+  string issue_policy_working_directory = 5;
+  // The name of image to generate new containers.
+  string image_name = 6;
+  // The absolute path of a directory to store analysis results.
+  string log_directory = 7;
+  // Absolute path to git executable.
+  string git_bin_path = 14;
+  // Allowed prefixes of git references.
+  repeated string allowed_ref_prefixes = 15;
+  // Intervals of workers.
+  int32 worker_sleep_interval_in_seconds = 17;
+  // The relative path of the file to store rules in a project.
+  string check_rules_path = 18;
+  // Absolute path of podman executable.
+  string podman_bin_path = 19;
+  // the base url of a rule doc
+  // Redmine configuration
+  optional RedmineConfiguration redmine = 20;
+  string doc_site_url = 21;
+  // The page size to get issues from redmine.
+  uint32 get_issues_page_size = 25;
+  // The fingerprints of common websites.
+  repeated string common_fingerprints = 26;
+  // The usrls to load local podman images
+  repeated string podman_load_urls = 27;
+  // The project types this worker can handle
+  repeated string allowed_project_types = 28;
+}
+
+message RedmineConfiguration {
+  // REST API key to use redmine API.
+  string rest_api_key = 1;
+  // Root URL for redmine project.
+  string redmine_url = 2;
+  // System key to visit path /sys.
+  string rest_api_system_key = 5;
+  // Redmine issues status ID
+  Status status = 10;
+  // Redmine tracker ID
+  Tracker tracker = 11;
+  // Redmine custom field ID
+  CustomField custom_field = 12;
+  // Redmine priority ID
+  Priority priority = 13;
+  // Redmine customized query to select uninitialized projects.
+  // Such query is created on redmine web GUI.
+  int32 uninit_projs_custom_query_id = 16;
+  RedmineRoleIDs role_ids = 17;
+}
+
+// Redmine issue status ID
+message Status {
+  // ID of new status.
+  int32 new = 1;
+  // ID of running status.
+  int32 running = 2;
+  // ID of resolved status.
+  int32 resolved = 3;
+  // ID of replied status.
+  int32 replied = 4;
+  // ID of error status.
+  int32 error = 5;
+  // ID of false positive status.
+  int32 false_positive = 7;
+  // ID of duplicate status.
+  int32 duplicate = 8;
+  // ID of fixed status.
+  int32 fixed = 9;
+  // ID of confirmed status.
+  int32 confirmed = 10;
+  // ID of verified false positive status.
+  int32 verified_false_positive = 11;
+  // ID of intentional status.
+  int32 intentional = 12;
+  // ID of verified intentional status.
+  int32 verified_intentional = 13;
+  // ID of obsolete status.
+  int32 obsolete = 14;
+}
+
+// Redmine tracker ID
+message Tracker {
+  // ID of error tracker.
+  int32 error = 1;
+  // ID of scan tracker.
+  int32 scan = 2;
+  // ID of mandatory tracker.
+  int32 mandatory = 3;
+  // ID of required tracker.
+  int32 required = 4;
+  // ID of advisory tracker.
+  int32 advisory = 5;
+  reserved 6;
+}
+
+// Redmine custom field
+message CustomField {
+  // Custom field ID of git ref name.
+  int32 ref_id = 1;
+  // Custom field ID of commit hash.
+  int32 commit_hash_id = 2;
+  // Custom field ID of path.
+  int32 path_id = 3;
+  // Custom field ID of error message.
+  int32 error_message_id = 4;
+  // Custom field ID of line number.
+  int32 line_number_id = 5;
+  // Custom field ID of git clone URL.
+  int32 git_clone_url_id = 6;
+  // Custom field ID of is_initialized.
+  int32 is_initialized_id = 7;
+  // Custom field ID of url to the related file.
+  int32 location_id = 8;
+  // Custom field ID of policy checked.
+  int32 policy_checked_id = 9;
+  // Custom field ID of scan task.
+  int32 scan_task_id = 10;
+  // Custom field ID of error locations.
+  int32 locations_id = 11;
+  // Custom field ID of deviation records.
+  int32 deviation_records_id = 12;
+  // Custom field ID of compliant records.
+  int32 compliant_records_id = 13;
+  // Custom field ID of doc link to related issue
+  int32 rule_doc_link = 14;
+  // Custom field ID of effective lines.
+  int32 effective_lines_id = 15;
+  // Custom field ID of check rules.
+  int32 check_rules_id = 16;
+  // Custom field ID of init submodule.
+  int32 init_submodule_id = 17;
+  // Custom field ID of check rules.
+  int32 project_check_rules_id = 18;
+  // Custom field ID of archive hash.
+  int32 archive_hash_id = 19;
+  // Custom field ID of project access token.
+  int32 project_access_token_id = 20;
+  // Custom field ID of analyze source directory.
+  int32 src_dir_id = 21;
+  // Custom field ID of ignore directory patterns.
+  int32 ignore_patterns_id = 22;
+  // Custom field ID of working branch.
+  int32 working_branch_id = 23;
+  // Custom field ID of severity.
+  int32 severity_id = 24;
+  // Custom field ID of project type.
+  int32 project_type_id = 25;
+  // Custom field ID of qmake pro path
+  int32 qt_pro_path_id = 26;
+  // Custom field ID of script contents
+  int32 script_contents_id = 27;
+  // Custom field ID of error code
+  int32 error_code_id = 28;
+}
+
+// Redmine priority ID
+message Priority {
+  // Normal priority ID
+  int32 normal = 1;
+}
+
+message RedmineRoleIDs {
+  int32 manager_role_id = 1;
+}

@@ -1,0 +1,56 @@
+See also:
+    * https://eel.is/c++draft/new.delete.single#3
+        [[nodiscard]] void* operator new(std::size_t size);
+        [[nodiscard]] void* operator new(std::size_t size, std::align_val_t alignment);
+        Required behavior:
+            Return a non-null pointer to suitably aligned storage ([basic.stc.dynamic]),
+            or else throw a bad_­alloc exception.
+            This requirement is binding on any replacement versions of these functions.
+    * https://eel.is/c++draft/new.delete.single#7
+        [[nodiscard]] void* operator new(std::size_t size, const std::nothrow_t&) noexcept;
+        [[nodiscard]] void* operator new(std::size_t size, std::align_val_t alignment,
+                                         const std::nothrow_t&) noexcept;
+        Required behavior:
+            Return a non-null pointer to suitably aligned storage ([basic.stc.dynamic]),
+            or else return a null pointer.
+            Each of these nothrow versions of operator new returns a pointer obtained
+            as if acquired from the (possibly replaced) corresponding non-placement function.
+            This requirement is binding on any replacement versions of these functions.
+    * https://eel.is/c++draft/new.delete.single#14
+        void operator delete(void* ptr) noexcept;
+        void operator delete(void* ptr, std::size_t size) noexcept;
+        void operator delete(void* ptr, std::align_val_t alignment) noexcept;
+        void operator delete(void* ptr, std::size_t size, std::align_val_t alignment) noexcept;
+        Required behavior:
+            A call to an operator delete with a size parameter may be changed to a call
+            to the corresponding operator delete without a size parameter,
+            without affecting memory allocation.
+            [Note 2: A conforming implementation is for operator delete(void* ptr, std​::​size_­t size)
+            to simply call operator delete(ptr). — end note]
+    * https://eel.is/c++draft/new.delete.array#3
+        [[nodiscard]] void* operator new[](std::size_t size);
+        [[nodiscard]] void* operator new[](std::size_t size, std::align_val_t alignment);
+        Required behavior:
+            Same as for the corresponding single-object forms.
+            This requirement is binding on any replacement versions of these functions.
+    * https://eel.is/c++draft/new.delete.array#7
+        [[nodiscard]] void* operator new[](std::size_t size, const std::nothrow_t&) noexcept;
+        [[nodiscard]] void* operator new[](std::size_t size, std::align_val_t alignment,
+                                           const std::nothrow_t&) noexcept;
+        Required behavior:
+            Return a non-null pointer to suitably aligned storage ([basic.stc.dynamic]),
+            or else return a null pointer.
+            Each of these nothrow versions of operator new[] returns a pointer obtained
+            as if acquired from the (possibly replaced) corresponding non-placement function.
+            This requirement is binding on any replacement versions of these functions.
+    * https://eel.is/c++draft/new.delete.array#13
+        void operator delete[](void* ptr) noexcept;
+        void operator delete[](void* ptr, std::size_t size) noexcept;
+        void operator delete[](void* ptr, std::align_val_t alignment) noexcept;
+        void operator delete[](void* ptr, std::size_t size, std::align_val_t alignment) noexcept;
+        Required behavior:
+            A call to an operator delete[] with a size parameter may be changed to a call
+            to the corresponding operator delete[] without a size parameter,
+            without affecting memory allocation.
+            [Note 2: A conforming implementation is for operator delete[](void* ptr, std​::​size_­t size)
+            to simply call operator delete[](ptr). — end note]

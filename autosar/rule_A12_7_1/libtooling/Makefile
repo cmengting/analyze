@@ -1,0 +1,2 @@
+all:
+	bazel build rule_A12_7_1

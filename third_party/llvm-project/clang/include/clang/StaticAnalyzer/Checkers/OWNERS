@@ -1,0 +1,2 @@
+per-file Checkers.td=file:/third_party/llvm-project/clang/lib/StaticAnalyzer/Checkers/OWNERS
+per-file NaiveCStdLibFunctionsInfo.h=file:/third_party/llvm-project/clang/lib/StaticAnalyzer/Checkers/OWNERS

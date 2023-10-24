@@ -1,0 +1,11 @@
+The current version of the C++ language is as defined by the ISO international Standard ISO/IEC 14822:2014(E) "Information technology - Programming languages - C++".
+
+The C++14 is the improved version of the C++11.
+
+The testcase for this rule_A1_1_1 only cover a few obvious examples. The documents of full features will be list below.
+
+For new features of C++14 can be found in en.cppreference.com/w/cpp/14
+
+For new features of C++17 can be found in en.cppreference.com/w/cpp/17
+
+For new features of C++20 can be found in en.cppreference.com/w/cpp/20

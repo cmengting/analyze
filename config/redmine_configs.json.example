@@ -1,0 +1,49 @@
+{
+  "rest_api_key": "7f86f417870daa9f7426491fa88e2a1ea2eec720",
+  "rest_api_system_key": "DvyPrD7x6aYnng6y",
+  "redmine_url": "http://localhost:3000",
+  "uninit_projs_custom_query_id": 8,
+  "status": {
+    "new": 1,
+    "running": 2,
+    "resolved": 3,
+    "replied": 4,
+    "error": 15,
+    "confirmed": 7,
+    "fixed": 8,
+    "false_positive": 9,
+    "verified_false_positive": 10,
+    "duplicate": 11,
+    "intentional": 12,
+    "verified_intentional": 13,
+    "obsolete": 14
+  },
+  "tracker": {
+    "error": 1,
+    "scan": 4,
+    "mandatory": 5,
+    "required": 6,
+    "advisory": 7
+  },
+  "custom_field": {
+    "ref_id": 3,
+    "commit_hash_id": 4,
+    "path_id": 5,
+    "error_message_id": 6,
+    "line_number_id": 8,
+    "git_clone_url_id": 1,
+    "is_initialized_id": 2,
+    "location_id": 9,
+    "locations_id": 10,
+    "policy_checked_id": 11,
+    "scan_task_id": 12,
+    "deviation_records_id": 13,
+    "compliant_records_id": 14,
+    "rule_doc_link": 7,
+    "effective_lines_id": 15,
+    "check_rules_id": 16
+  },
+  "priority": {
+    "normal": 2
+  }
+}
