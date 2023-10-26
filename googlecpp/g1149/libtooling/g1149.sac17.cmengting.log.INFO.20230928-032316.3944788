@@ -1,8 +1,0 @@
-Log file created at: 2023/09/28 03:23:16
-Running on machine: sac17
-Running duration (h:mm:ss): 0:00:00
-Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
-I20230928 03:23:16.275591 3944788 g1149.cc:51] ppcallbacks status: 0
-I20230928 03:23:21.772342 3944788 checker.cc:28] If a source or header file refers to a symbol defined elsewhere, the file should directly include a header file which properly intends to provide a declaration or definition of that symbol, path: mainfile:/home/cmengting/analyzer/googlecpp/g1149/_bad0009/bad.cc, line: 15
-I20230928 03:23:21.782938 3944788 g1149.cc:54] libtooling status: 0
-I20230928 03:23:21.783020 3944788 g1149.cc:57] g1149 check done
