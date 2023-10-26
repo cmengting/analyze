@@ -241,7 +241,7 @@ func runChecker(
 			glog.Errorf("in %s: %v", taskName, err)
 		}
 	} else if checker == checker_integration.Mixture && !onlyCppcheck {
-		// TODO(kevin): remove Mixture
+		// TODO: remove Mixture
 		errs = ExecMixture(
 			checkRule,
 			filepath.Join(filteredCompileCommandsFolder, analyzerinterface.CCJson),
@@ -264,7 +264,7 @@ func runChecker(
 			glog.Errorf("in %s: %v errors: %v", taskName, len(errs), strings.Join(errStrings, "\n"))
 		}
 	} else if checker == checker_integration.EmptyChecker {
-		// TODO(kevin): remove this hack
+		// TODO: remove this hack
 		glog.Infof("in %s: checking %s", taskName, checkRule.Name)
 	}
 	glog.Infof("in %s: checker %s reported %d results", taskName, checker, len(allResults.Results))
@@ -299,7 +299,7 @@ func Run(
 		glog.Warning("gcc is disabled and this may introduce false negatives")
 	}
 	resultsDir, err = os.MkdirTemp(resultsDir, filepath.Base(checkRule.Name)+"-*")
-	// TODO(chenshi): clean up temp dir with `defer os.RemoveAll(resultsDir)` if succeeded.
+	// TODO` if succeeded.
 	if err != nil {
 		glog.Errorf("rule: %v, os.MkdirTemp: %v", checkRule.Name, err)
 		return nil, err
@@ -370,7 +370,7 @@ func Run(
 			}
 		}
 		if limitMemory && oomKill {
-			// TODO(r/8643): magnification should be an option
+			// TODO: magnification should be an option
 			mem = int(float64(mem) * 1.5)
 			cpu, err := allocateCpuMem(taskName, mem, checker, checkerConfig)
 			if err != nil {
@@ -670,7 +670,7 @@ func Analyze(
 		for j := range jobs {
 			func() {
 				start := time.Now()
-				// TODO(kevin): refactor this, just pass job is suitable
+				// TODO: refactor this, just pass job is suitable
 				resultList, err := Run(
 					j.Rule,
 					j.ResultDir,
@@ -800,7 +800,7 @@ func RunCmdWithRuleName(compileCommandsPath, ruleName, resultsPath, resultDir, l
 	basic.FilterLibToolingExtraArgs(&allArgs, ruleName, jsonOptions)
 
 	ruleNumber := strings.Split(ruleName, "/")[1]
-	// TODO(b/2197): make it work on Windows filesystems
+	// TODO: make it work on Windows filesystems
 	progName := filepath.Join(misraCheckerPath, ruleNumber)
 
 	results, err := libtooling.ExecLibtooling(

@@ -67,6 +67,7 @@ type JSONOption struct {
 	EnumConstantLimit                  *int     `json:"enum-constant-limit,omitempty" yaml:"-"` //misra_c_2012/rule_1_1
 	StringCharLimit                    *int     `json:"string-char-limit,omitempty" yaml:"-"`   //misra_c_2012/rule_1_1
 	ExternIDLimit                      *int     `json:"extern-id-limit,omitempty" yaml:"-"`     //misra_c_2012/rule_1_1
+	MacroIDLimit                       *int     `json:"macro-id-limit,omitempty" yaml:"-"`      //misra_c_2012/rule_1_1
 }
 
 type FilterAndSinkFunc struct {
