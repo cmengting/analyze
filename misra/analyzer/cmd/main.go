@@ -163,7 +163,7 @@ func main() {
 		glog.Fatalf("options.CheckCodeLines: %v", err)
 	}
 
-	// TODO(kevin): deprecated checker config
+	// TODO: deprecated checker config
 	parsedCheckerConfig := options.ParseCheckerConfig(sharedOptions, numWorkers, cpplines, projType)
 	glog.Info("parsedCheckerConfig: ", parsedCheckerConfig)
 
@@ -173,7 +173,7 @@ func main() {
 		basic.PrintfWithTimeStamp(printer.Sprintf("Start parsing compilation database"))
 		stats.WriteProgress(sharedOptions.GetResultsDir(), stats.PP, "0%", start)
 	}
-	// TODO(kevin): there still some duplicated action which remove ignore files twice.
+	// TODO: there still some duplicated action which remove ignore files twice.
 	compileCommandsPath, err := analyzerinterface.GenerateActualCCJsonByRemoveIgnoreFiles(compileCommandsPath, sharedOptions.GetIgnoreDirPatterns())
 	if err != nil {
 		glog.Fatalf("analyzerinterface.GenerateActualCCJsonByRemoveIgnoreFiles(: %v", err)
@@ -184,7 +184,7 @@ func main() {
 	}
 	defer os.RemoveAll(filteredCompileCommandsFolder)
 
-	// TODO(xjia): analyze the build process to get a list of "systems"
+	// TODO: analyze the build process to get a list of "systems"
 	checkRulesPath := filepath.Join(sharedOptions.GetConfigDir(), "check_rules")
 	checkRules, err := analyzerinterface.ReadCheckRules(checkRulesPath)
 	if err != nil {
@@ -400,7 +400,7 @@ func checkRuleSet(
 			if error != nil {
 				glog.Fatal(error)
 			}
-			// TODO(kevin): handle onlyCppcheck
+			// TODO: handle onlyCppcheck
 			results, errors := runner(checkRules, srcdir, envOptions)
 			for _, error := range errors {
 				if error != nil {

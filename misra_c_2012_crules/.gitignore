@@ -13,3 +13,6 @@ filtered_compile_commands.json
 infer_filtered_compile_commands.json
 libtest.a
 libtooling-out*
+*/libtooling/*.INFO*
+*/libtooling/*.ERROR*
+*/libtooling/*.WARNING*

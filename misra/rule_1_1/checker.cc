@@ -133,6 +133,16 @@ void ReportExternIDError(int extern_id_limit, int extern_id_count, string path,
   pb_result->set_extern_id_count(to_string(extern_id_count));
 }
 
+void ReportMacroIDError(int macro_id_limit, int macro_id_count, string path,
+                        int line_number, ResultsList* results_list) {
+  analyzer::proto::Result* pb_result =
+      AddResultToResultsList(results_list, path, line_number, error_message);
+  pb_result->set_error_kind(
+      analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_1_1_MACRO_ID);
+  pb_result->set_macro_id_limit(to_string(macro_id_limit));
+  pb_result->set_macro_id_count(to_string(macro_id_count));
+}
+
 }  // namespace
 
 namespace misra {
@@ -397,10 +407,10 @@ class ExternIDCallback : public MatchFinder::MatchCallback {
     visitor.TraverseDecl(const_cast<TranslationUnitDecl*>(tud));
     int extern_id_count = 0;
     for (const VarDecl* vd : visitor.getVarDecls()) {
-      if (vd->isExternC()) extern_id_count++;
+      if (vd->hasExternalFormalLinkage()) extern_id_count++;
     }
     for (const FunctionDecl* fd : visitor.getFuncDecls()) {
-      if (fd->isExternC()) extern_id_count++;
+      if (fd->hasExternalFormalLinkage()) extern_id_count++;
     }
     if (extern_id_count > extern_id_limit_) {
       ReportExternIDError(
@@ -415,7 +425,7 @@ class ExternIDCallback : public MatchFinder::MatchCallback {
   ResultsList* results_list_;
 };
 
-void Checker::Init(LimitList limits, ResultsList* results_list) {
+void ASTChecker::Init(LimitList limits, ResultsList* results_list) {
   results_list_ = results_list;
   struct_member_callback_ = new StructMemberCallback;
   struct_member_callback_->Init(limits.struct_member_limit, results_list_,
@@ -443,6 +453,27 @@ void Checker::Init(LimitList limits, ResultsList* results_list) {
                               &finder_);
   extern_id_callback_ = new ExternIDCallback;
   extern_id_callback_->Init(limits.extern_id_limit, results_list_, &finder_);
+}
+
+void PreprocessConsumer::HandleTranslationUnit(ASTContext& context) {
+  Preprocessor& pp = compiler_.getPreprocessor();
+  SourceManager& sm = context.getSourceManager();
+  const TranslationUnitDecl* tud = context.getTranslationUnitDecl();
+  set<string> macro_ids{};
+  for (const auto& macro : pp.macros()) {
+    const MacroInfo* info = pp.getMacroInfo(macro.getFirst());
+    if (!info) continue;
+    SourceLocation sl = info->getDefinitionLoc();
+    if (sl.isValid() && !sm.isInSystemHeader(sl) && !sm.isInSystemMacro(sl) &&
+        !info->isBuiltinMacro() && sm.isInMainFile(sl)) {
+      string macro_id = macro.first->getName().str();
+      macro_ids.insert(macro_id);
+    }
+  }
+  if (macro_ids.size() > limits_.macro_id_limit)
+    ReportMacroIDError(limits_.macro_id_limit, macro_ids.size(),
+                       libtooling_utils::GetFilename(tud, &sm),
+                       libtooling_utils::GetLine(tud, &sm), results_list_);
 }
 
 }  // namespace rule_1_1

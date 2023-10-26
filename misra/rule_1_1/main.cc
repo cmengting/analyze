@@ -31,6 +31,7 @@ extern cl::opt<int> switch_case_limit;
 extern cl::opt<int> enum_constant_limit;
 extern cl::opt<int> string_char_limit;
 extern cl::opt<int> extern_id_limit;
+extern cl::opt<int> macro_id_limit;
 
 namespace misra {
 namespace rule_1_1 {
@@ -54,14 +55,23 @@ int rule_1_1(int argc, char** argv) {
   ClangTool tool(options_parser.getCompilations(),
                  options_parser.getSourcePathList());
   analyzer::proto::ResultsList all_results;
-  misra::rule_1_1::Checker checker;
+
+  // running ASTChecker
+  misra::rule_1_1::ASTChecker ast_checker;
   LimitList limits{struct_member_limit, function_parm_limit, function_arg_limit,
                    nested_record_limit, nested_expr_limit,   switch_case_limit,
-                   enum_constant_limit, string_char_limit,   extern_id_limit};
-  checker.Init(limits, &all_results);
+                   enum_constant_limit, string_char_limit,   extern_id_limit,
+                   macro_id_limit};
+  ast_checker.Init(limits, &all_results);
   int status =
-      tool.run(newFrontendActionFactory(checker.GetMatchFinder()).get());
-  LOG(INFO) << "libtooling status: " << status;
+      tool.run(newFrontendActionFactory(ast_checker.GetMatchFinder()).get());
+  LOG(INFO) << "libtooling status (ASTChecker): " << status << endl;
+
+  // running PreprocessChecker
+  misra::rule_1_1::PreprocessChecker preprocess_checker{&all_results, limits};
+  status = tool.run(&preprocess_checker);
+  LOG(INFO) << "libtooling status (PreprocessChecker): " << status << endl;
+
   if (misra::proto_util::GenerateProtoFile(all_results, results_path).ok()) {
     LOG(INFO) << "rule 1.1 check done";
   }

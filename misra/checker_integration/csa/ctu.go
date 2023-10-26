@@ -27,7 +27,7 @@ import (
 // compile_commands.json, including externalDefMap.txt & invocation-list.yml .
 func GenerateCTUExtraArgumentsFromCodeChecker(compileCommandsPath, resultsDir string, config *pb.CheckerConfiguration) error {
 	cmd_arr := []string{"analyze", "--ctu-collect", "--ctu-ast-mode", "parse-on-demand"}
-	cmd_arr = append(cmd_arr, "-o", resultsDir) // TODO(chenshi): Replace with a configurable path
+	cmd_arr = append(cmd_arr, "-o", resultsDir) // TODO: Replace with a configurable path
 	cmd_arr = append(cmd_arr, compileCommandsPath)
 	cmd := exec.Command(config.CodeCheckerBin, cmd_arr...)
 	glog.Info("executing: ", cmd.String())
