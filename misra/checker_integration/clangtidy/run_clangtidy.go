@@ -51,7 +51,7 @@ func Exec(
 			continue
 		}
 		sourceFile := action.Command.File
-		// TODO: pre-exec checks
+		// TODO(tianhaoyu): pre-exec checks
 		check := checkMap[checkRule]
 		cmdArgs := []string{"--checks=-*," + check, sourceFile}
 		cmdArgs = append(cmdArgs, fmt.Sprintf("--p=%s", filepath.Dir(compileCommandsPath)))
@@ -71,7 +71,7 @@ func Exec(
 		cmd := exec.Command(clangtidyBin, cmdArgs...)
 		cmd.Dir = action.Command.Directory
 		glog.Info("executing: ", cmd.String())
-		// TODO: Output is based on []byte, maybe exceed buffer size
+		// TODO(tianhaoyu): Output is based on []byte, maybe exceed buffer size
 		out, err := basic.CombinedOutput(cmd, taskName, limitMemory, timeoutNormal, timeoutOom)
 		if err != nil {
 			glog.Errorf("clang-query execution error: executing: %s, reported:\n%s", cmd.String(), string(out))

@@ -1,0 +1,31 @@
+MISRA C++ Rule 15.3.1
+Exceptions shall be raised only after start-up and before terminations of the program.
+
+GCC has a -Wterminate warning, to check whether dtor throws any exception.
+See gcc/testsuite/g++.dg/warn/Wterminate1.C:
+
+```cpp
+struct A
+{
+  ~A()
+  {
+    throw 1;			// { dg-warning "terminate" }
+  }
+};
+
+int main()
+{
+  try { A a;  }
+  catch (...) {}
+}
+```
+
+See gcc/c-family/c.opt:
+
+```
+Wterminate
+C++ ObjC++ Warning Var(warn_terminate) Init(1)
+Warn if a throw expression will always result in a call to terminate().
+```
+
+This check covered bad2 & bad3, but not bad1.

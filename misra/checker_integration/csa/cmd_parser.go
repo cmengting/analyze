@@ -800,7 +800,7 @@ func ParseOptions(compilationDbEntry *compilecommand.CompileCommand, config *pb.
 	}
 	for it := 1; it < len(command); it++ {
 		for _, processorName := range flagProcessors {
-			// TODO: use a more efficient way to construct an iterator as CodeChecker does.
+			// TODO(cmengting): use a more efficient way to construct an iterator as CodeChecker does.
 			if filterFunctionMap[processorName](command[it:], &details) {
 				break
 			}

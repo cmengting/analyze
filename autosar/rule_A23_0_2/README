@@ -1,0 +1,2 @@
+This testcase gives some examples of container <vector> and <map>.
+For more details of this rule, please refer to: https://en.cppreference.com/w/cpp/container

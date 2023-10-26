@@ -304,7 +304,7 @@ func RunMisraAnalyze(srcdir string, misraCheckRules []checkrule.CheckRule, check
 
 	envOptions := checkOptions.EnvOption
 	compileCommandsPath := options.GetCompileCommandsPath(srcdir)
-	// TODO: pass compileCommandsPath as function arguments
+	// TODO(kevin): pass compileCommandsPath as function arguments
 	if !checkOptions.EnvOption.IsDev {
 		compileCommandsPath = options.GetActualCompileCommandsPath(srcdir)
 	}
@@ -366,7 +366,7 @@ func RunMisraAnalyze(srcdir string, misraCheckRules []checkrule.CheckRule, check
 func RunCSA(srcdir string, csaOptions string, checkOptions *options.CheckOptions) (*csa.CSAReport, error) {
 	envOptions := checkOptions.EnvOption
 	compileCommandsPath := options.GetCompileCommandsPath(srcdir)
-	// TODO: pass compileCommandsPath as function arguments
+	// TODO(kevin): pass compileCommandsPath as function arguments
 	if !checkOptions.EnvOption.IsDev {
 		compileCommandsPath = options.GetActualCompileCommandsPath(srcdir)
 	}
@@ -391,7 +391,7 @@ func RunCSA(srcdir string, csaOptions string, checkOptions *options.CheckOptions
 func RunInfer(srcdir string, inferPlugin string, checkOptions *options.CheckOptions) (*[]infer.InferReport, error) {
 	envOptions := checkOptions.EnvOption
 	compileCommandsPath := options.GetCompileCommandsPath(srcdir)
-	// TODO: pass compileCommandsPath as function arguments
+	// TODO(kevin): pass compileCommandsPath as function arguments
 	if !checkOptions.EnvOption.IsDev {
 		compileCommandsPath = options.GetActualCompileCommandsPath(srcdir)
 	}
@@ -472,9 +472,9 @@ func RunLibtoolingWithExtraArgs(srcdir string, ruleName string, extraArgsStr str
 		return nil, err
 	}
 
-	// TODO: list files without compile_commands.json
+	// TODO(zry): list files without compile_commands.json
 	compileCommandsPath := options.GetCompileCommandsPath(srcdir)
-	// TODO: pass compileCommandsPath as function arguments
+	// TODO(kevin): pass compileCommandsPath as function arguments
 	if !opts.EnvOption.IsDev {
 		compileCommandsPath = options.GetActualCompileCommandsPath(srcdir)
 	}
@@ -527,7 +527,7 @@ func RunLibtooling(srcdir string, ruleName string, checkerType checker_integrati
 
 func RunCppcheck(srcdir string, ruleName string, checkerType checker_integration.Checker, opts *options.CheckOptions) (*pb.ResultsList, error) {
 	compileCommandsPath := options.GetCompileCommandsPath(srcdir)
-	// TODO: pass compileCommandsPath as function arguments
+	// TODO(kevin): pass compileCommandsPath as function arguments
 	if !opts.EnvOption.IsDev {
 		compileCommandsPath = options.GetActualCompileCommandsPath(srcdir)
 	}
@@ -606,7 +606,7 @@ func RunCpplint(srcdir, filter string, opts *options.CheckOptions) ([]cpplint.Re
 }
 
 func RunClangSema(srcdir, cmd_arg string, opts *options.CheckOptions) ([]clangsema.Diagnostic, error) {
-	// TODO: pass compileCommandsPath as function arguments
+	// TODO(kevin): pass compileCommandsPath as function arguments
 	compileCommandsPath := options.GetCompileCommandsPath(srcdir)
 	if !opts.EnvOption.IsDev {
 		compileCommandsPath = options.GetActualCompileCommandsPath(srcdir)
@@ -642,7 +642,7 @@ func RunClangTidy(srcdir string, cmd_arg []string, opts *options.CheckOptions) (
 			continue
 		}
 		sourceFile := action.Command.File
-		// TODO: pre-exec checks
+		// TODO(tianhaoyu): pre-exec checks
 		cmdArgs := []string{"--checks=-*," + cmd_arg[0]}
 		if len(cmd_arg) > 1 {
 			cmdArgs = append(cmdArgs, cmd_arg[1])
@@ -656,7 +656,7 @@ func RunClangTidy(srcdir string, cmd_arg []string, opts *options.CheckOptions) (
 		cmd := exec.Command(opts.EnvOption.CheckerConfig.ClangtidyBin, cmdArgs...)
 		cmd.Dir = action.Command.Directory
 		glog.Info("executing: ", cmd.String())
-		// TODO: Output is based on []byte, maybe exceed buffer size
+		// TODO(tianhaoyu): Output is based on []byte, maybe exceed buffer size
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			glog.Errorf("clang-tidy execution error: executing: %s, reported:\n%s", cmd.String(), string(out))
@@ -693,7 +693,7 @@ func RunClangForErrorsOrWarnings(srcdir string, getErrors bool, extraArgs string
 	if extraArgs != "" {
 		args = strings.Split(extraArgs, " ")
 	}
-	// TODO: pass compileCommandsPath as function arguments
+	// TODO(kevin): pass compileCommandsPath as function arguments
 	compileCommandsPath := options.GetCompileCommandsPath(srcdir)
 	if !opts.EnvOption.IsDev {
 		compileCommandsPath = options.GetActualCompileCommandsPath(srcdir)

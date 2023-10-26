@@ -155,7 +155,7 @@ class InternalFDCallback : public MatchFinder::MatchCallback {
 };
 
 void Checker::Init(ResultsList* results_list) {
-  // TODO: fix leaks when necessary
+  // TODO(tianhaoyu): fix leaks when necessary
   results_list_ = results_list;
   internal_vd_callback_ = new InternalVDCallback;
   internal_vd_callback_->Init(results_list_, &internal_name_locations_,

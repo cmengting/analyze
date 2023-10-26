@@ -1,0 +1,8 @@
+MISRA C++ 2008 Rule 3-2-3
+A type, object or function that is used in multiple translation units shall be declared in one and only one file.
+
+Explaination about "used in multiple translation units":
+   - for type, every type shall be declared in one and only one file.
+   - for object, every object with external linkage shall be declared in one and only one file.
+   - for function, every function with external linkage shall be declared in one and only one file.
+

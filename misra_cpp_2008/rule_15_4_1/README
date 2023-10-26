@@ -1,0 +1,10 @@
+MISRA C++ 2008 Rule 15-4-1
+If a function is declared with an exception-specification, then all declarations
+of the same function (in other translation units) shall be declared with the same
+set of type-ids.
+
+Clang document says canonical types are useful for type comparisons (they allow
+by-pointer equality tests) and useful for reasoning about whether something has a
+particular form (e.g. is a function type), because they implicitly, recursively,
+strip all typedefs out of a type.
+See https://clang.llvm.org/doxygen/classclang_1_1Type.html#details.

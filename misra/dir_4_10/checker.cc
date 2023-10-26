@@ -192,7 +192,7 @@ void PrecautionCheck::ReportError(string filename) {
 }
 
 void PrecautionCheck::ReportError(string filename, string other_filename) {
-  // TODO: use multiple place.
+  // TODO(tianhaoyu): use multiple place.
   string error_message = absl::StrFormat(
       "[C2313][misra-c2012-dir-4.10]: %s and %s has same file identifier",
       filename, other_filename);

@@ -456,7 +456,7 @@ func DeleteRepeatedResults(allResults *pb.ResultsList) error {
 	return nil
 }
 
-// TODO: deprecated this, filter in build actions
+// TODO(kevin): deprecated this, filter in build actions
 func DeleteCCResults(allResults *pb.ResultsList) {
 	rtnResults := make([]*pb.Result, 0)
 	for _, currentResult := range allResults.Results {
@@ -469,7 +469,7 @@ func DeleteCCResults(allResults *pb.ResultsList) {
 	allResults.Results = rtnResults
 }
 
-// TODO: deprecated this, filter in build actions
+// TODO(kevin): deprecated this, filter in build actions
 func DeleteCResults(allResults *pb.ResultsList) {
 	rtnResults := make([]*pb.Result, 0)
 	for _, currentResult := range allResults.Results {

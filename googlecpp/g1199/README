@@ -1,0 +1,77 @@
+Google styleguide:
+Use care when converting integer types.
+Integer conversions and promotions can cause undefined behavior, leading to
+security bugs and other problems.
+
+--------
+
+From https://en.cppreference.com/w/cpp/language/operator_arithmetic:
+
+Unsigned integer arithmetic is always performed modulo 2^n where n is the number
+of bits in that particular integer. E.g. for unsigned int, adding one to
+UINT_MAX gives ​0​, and subtracting one from ​0​ gives UINT_MAX.
+When signed integer arithmetic operation overflows (the result does not fit in
+the result type), the behavior is undefined.
+
+Note: `INT_MIN - 1` is an overflow too.
+
+--------
+
+From https://en.cppreference.com/w/c/language/conversion:
+
+Although signed integer overflow in any arithmetic operator is undefined
+behavior, overflowing a signed integer type in an integer conversion is
+merely unspecified behavior.
+On the other hand, although unsigned integer overflow in any arithmetic operator
+(and in integer conversion) is a well-defined operation and follows the rules of
+modulo arithmetic, overflowing an unsigned integer in a floating-to-integer
+conversion is undefined behavior: the values of real floating type that can be
+converted to unsigned integer are the values from the open interval
+(-1; Unnn_MAX+1).
+
+--------
+
+From https://en.cppreference.com/w/cpp/language/implicit_conversion:
+
+(Integral conversions) If the destination type is signed, the value does not
+change if the source integer can be represented in the destination type.
+Otherwise the result is implementation-defined (until C++20) the unique value of
+the destination type equal to the source value modulo 2^n where n is the number
+of bits used to represent the destination type. (since C++20). (Note that this
+is different from signed integer arithmetic overflow, which is undefined).
+
+--------
+
+Survey on C++11: https://www.open-std.org/JTC1/SC22/WG21/docs/papers/2011/n3242.pdf
+
+5.4 (p87) If during the evaluation of an expression, the result is not
+mathematically defined or not in the range ofrepresentable values for its type,
+the behavior is undefined. [Note: most existing implementations of C++ ignore
+integer overflows. Treatment of division by zero, forming a remainder using a
+zero divisor, and all floating point exceptions vary among machines, and is
+usually adjustable by a library function.]
+
+--------
+
+In short:
+
+interger conversion
+  signed overflow: UB
+  unsigned overflow: never
+floating-to-integer conversion
+  signed overflow: UB
+  unsigned overflow: UB
+
+see also, for C: https://frama-c.com/2013/10/09/Overflow-float-integer.html
+
+--------
+
+Clang has a sanitizer to dynamically detect integer casting UB.
+
+https://maskray.me/blog/2023-01-29-all-about-undefined-behavior-sanitizer
+third_party/llvm-project/compiler-rt/lib/ubsan/
+https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+
+--------
+
+Clangsema has some integer casting checks too. See README.clangsema.

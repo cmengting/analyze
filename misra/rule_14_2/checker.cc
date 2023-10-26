@@ -73,7 +73,7 @@ bool HasNonBoolSubExpr(const Expr* expr, const ASTContext* context) {
          misra::libtooling_utils::kBoolean;
 }
 
-// TODO: For now all functions are impure
+// TODO(tianhaoyu): For now all functions are impure
 bool HasImpureFunctionCall(const Stmt* expr) {
   if (const CallExpr* callexpr = dyn_cast<CallExpr>(expr)) {
     return true;

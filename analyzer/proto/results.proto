@@ -46,8 +46,6 @@ message Result {
     MISRA_C_2012_RULE_1_1_ENUM_CONSTANT = 1010107;
     MISRA_C_2012_RULE_1_1_STRING_CHAR = 1010108;
     MISRA_C_2012_RULE_1_1_EXTERN_ID = 1010109;
-    MISRA_C_2012_RULE_1_1_EXTERN_ID_CHAR = 1010110;
-    MISRA_C_2012_RULE_1_1_MACRO_ID = 1010111;
     MISRA_C_2012_RULE_1_3 = 1010301;
     MISRA_C_2012_RULE_1_4 = 1010400;
     MISRA_C_2012_RULE_2_1 = 1020101;
@@ -516,10 +514,6 @@ message Result {
   string string_char_count = 42;
   string extern_id_limit = 43;
   string extern_id_count = 44;
-  string extern_id_char_limit = 45;
-  string extern_id_char_count = 46;
-  string macro_id_limit = 47;
-  string macro_id_count = 48;
 
   int32 severity = 21;
   string code_line_hash = 22;

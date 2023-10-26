@@ -1,0 +1,107 @@
+#!/bin/bash
+#
+# Copyright 2022 Naive Systems Ltd.
+#
+# This software contains information and intellectual property that is
+# confidential and proprietary to Naive Systems Ltd. and its affiliates.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+addbadcasetemplate() {
+        if [[ -d "rule_$1/_bad000$2" ]]; then
+                return
+        fi
+        mkdir -p "rule_$1/_bad000$2"
+
+        touch "rule_$1/_bad000$2/bad$2.c"
+        cat >"rule_$1/_bad000$2/expected.textproto" << EOF
+results {
+  path: "bad$2.c"
+  line_number: 0
+  error_message: "errorMessage"
+}
+EOF
+        cat >"rule_$1/_bad000$2/Makefile" << EOF
+all:
+	clang -c *.c
+
+clean:
+	rm *.o
+EOF
+        cat >> "rule_$1/rule_$1_test.go"<< EOF
+
+func TestBad000$2(t *testing.T) {
+	tc := testcase.New(t, "_bad000$2")
+	opts := &options.CheckOptions{}
+	tc.ExpectFailure(Analyze(tc.Srcdir, opts))
+}
+EOF
+}
+
+addgoodcasetemplate() {
+        if [[ -d "rule_$1/_good000$2" ]]; then
+                return
+        fi
+        mkdir -p "rule_$1/_good000$2"
+
+        touch "rule_$1/_good000$2/good$2.c"
+        touch "rule_$1/_good000$2/expected.textproto"
+        cat >"rule_$1/_good000$2/Makefile" << EOF
+all:
+	clang -c *.c
+
+clean:
+	rm *.o
+EOF
+        cat >> "rule_$1/rule_$1_test.go"<< EOF
+
+func TestGood000$2(t *testing.T) {
+	tc := testcase.New(t, "_good000$2")
+	opts := &options.CheckOptions{}
+	tc.ExpectOK(Analyze(tc.Srcdir, opts))
+}
+EOF
+}
+
+maketestcasetmplts() {
+	cd "$(dirname "${BASH_SOURCE[0]}")/.."
+        local section="$1"      # X in rule_X_Y
+        local rulenum="$2"      # Y in rule_X_Y
+
+        local goodCaseNum="$3"  # M: create M good case folders
+        local badCaseNum="$4"   # N: create N bad case folders
+
+        cat >"rule_${section}_${rulenum}/rule_${section}_${rulenum}_test.go" << EOF
+/*
+Copyright 2022 Naive Systems Ltd.
+
+This software contains information and intellectual property that is
+confidential and proprietary to Naive Systems Ltd. and its affiliates.
+*/
+
+package rule_${section}_${rulenum}
+
+import (
+	"testing"
+
+	"naive.systems/analyzer/cruleslib/options"
+	"naive.systems/analyzer/gorules/testcase"
+)
+EOF
+
+        for (( testnum=1; testnum<=$goodCaseNum; testnum++ ))
+        do
+            addgoodcasetemplate "${section}_${rulenum}" ${testnum}
+        done
+
+        for (( testnum=1; testnum<=$badCaseNum; testnum++ ))
+        do
+            addbadcasetemplate "${section}_${rulenum}" ${testnum}
+        done
+
+        echo "Created ${goodCaseNum} good cases and ${badCaseNum} bad cases in rule_${section}_${rulenum}."
+}
+
+maketestcasetmplts "$@"

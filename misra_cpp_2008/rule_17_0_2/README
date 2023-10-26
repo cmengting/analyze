@@ -1,0 +1,30 @@
+MISRA C++ Rule 17.0.2
+The names of standard library macros and objects shall not be reused.
+
+macros
+
+<cstddef> NULL offsetof
+<cstdlib> EXIT_FAILURE EXIT_SUCCESS
+<cstdarg> va_arg va_end va_start
+<csetjmp> setjmp
+<ctime> CLOCKS_PER_SEC
+<csignal> SIGABRT SIGILL SIGSEGV SIG_DFL SIG_IGN SIGFPE SIGINT SIGTERM SIG_ERR
+<cassert> assert
+<cerrno> EDOM ERANGE errno
+<cstring> NULL
+<ctime> NULL
+<cwctype> WEOF <cwctype>
+<cstring> NULL <cstring>
+<cwchar> NULL <cwchar> WCHAR_MAX WCHAR_MIN WEOF <cwchar>
+<cstdlib> MB_CUR_MAX
+<clocale> LC_ALL LC_COLLATE LC_CTYPE LC_MONETARY LC_NUMERIC LC_TIME NULL
+<cmath> HUGE_VAL
+<cstdlib> RAND_MAX
+<cstdio> BUFSIZ FOPEN_MAX SEEK_CUR TMP_MAX _IONBF stdout EOF L_tmpnam SEEK_END _IOFBF stderr FILENAME_MAX NULL <cstdio> SEEK_SET _IOLBF stdin
+
+objects
+
+<climits> CHAR_BIT CHAR_MAX CHAR_MIN INT_MAX INT_MIN LONG_MAX LONG_MIN MB_LEN_MAX SCHAR_MAX SCHAR_MIN SHRT_MAX SHRT_MIN UCHAR_MAX UINT_MAX ULONG_MAX USHRT_MAX
+<cfloat> DBL_DIG DBL_EPSILON DBL_MANT_DIG DBL_MAX DBL_MAX_10_EXP DBL_MAX_EXP DBL_MIN DBL_MIN_10_EXP DBL_MIN_EXP FLT_DIG FLT_EPSILON FLT_MANT_DIG FLT_MAX FLT_MAX_10_EXP FLT_MAX_EXP FLT_MIN FLT_MIN_10_EXP FLT_MIN_EXP FLT_RADIX FLT_ROUNDS LDBL_DIG LDBL_EPSILON LDBL_MANT_DIG LDBL_MAX LDBL_MAX_10_EXP LDBL_MAX_EXP LDBL_MIN LDBL_MIN_10_EXP LDBL_MIN_EXP
+<new> nothrow
+<iostream> cin cout cerr clog wcin wcout wcerr wclog
