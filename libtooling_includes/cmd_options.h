@@ -73,6 +73,18 @@ llvm::cl::opt<int> extern_id_limit(
         "external identifier limit count in one translation unit, default 4095"),
     llvm::cl::init(4095), llvm::cl::cat(ns_libtooling_checker));
 
+llvm::cl::opt<int> macro_id_limit(
+    "MacroIDLimit",
+    llvm::cl::desc(
+        "macro identifiers simultaneously defined in one preprocessing translation unit, default 4095"),
+    llvm::cl::init(4095), llvm::cl::cat(ns_libtooling_checker));
+
+llvm::cl::opt<int> macro_parm_limit(
+    "MacroParmLimit",
+    llvm::cl::desc(
+        "parameter limit count in one macro definition, default 127"),
+    llvm::cl::init(127), llvm::cl::cat(ns_libtooling_checker));
+
 llvm::cl::opt<bool> aggressive_mode(
     "AggressiveMode",
     llvm::cl::desc("Set to the Aggressive Mode, default false"),

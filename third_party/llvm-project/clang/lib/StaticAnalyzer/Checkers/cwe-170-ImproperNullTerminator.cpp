@@ -303,7 +303,7 @@ SVal NullTerminatorChecker::getBufferSize(CheckerContext &C,
     return UnknownVal();
   }
   return getDynamicExtent(C.getState(), MR, C.getSValBuilder());
-  // TODO(xumuchen) Track bufferr size for VLA, we may need another PROGRAMSTATE
+  // TODO Track bufferr size for VLA, we may need another PROGRAMSTATE
   // to do this, since we can only get the value at the declare time.
 }
 

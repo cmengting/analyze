@@ -31,8 +31,4 @@ require (
 )
 
 replace (
-	github.com/golang/glog => ./third_party/github.com/golang/glog
-	github.com/hhatto/gocloc => ./third_party/github.com/hhatto/gocloc
-	github.com/libgit2/git2go/v33 => ./third_party/github.com/libgit2/git2go.v33
-	github.com/securego/gosec/v2 => ./third_party/github.com/securego/gosec.v2
 )

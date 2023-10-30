@@ -18,6 +18,10 @@ import (
 )
 
 func Analyze(srcdir string, opts *options.CheckOptions) (*pb.ResultsList, error) {
+	if opts.JsonOption.Standard == "c89" || opts.JsonOption.Standard == "c90" {
+		return &pb.ResultsList{}, nil
+	}
+
 	results, err := runner.RunLibtooling(srcdir, "misra/rule_13_1", checker_integration.Libtooling_CTU, opts)
 	if err != nil {
 		glog.Error(err)

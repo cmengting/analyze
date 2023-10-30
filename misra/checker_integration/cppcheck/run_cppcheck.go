@@ -109,7 +109,7 @@ func execByFileList(filePathList []string, checkRule, resultsDir string, inputCp
 			return nil, fmt.Errorf("in %s, executing: %s, reported:\n%s", taskName, cmd.String(), outStr)
 		} else {
 			// cppcheck will exit with 1 if found violations, it's not an error.
-			// TODO(kevin): handle real crashed bug.
+			// TODO: handle real crashed bug.
 			glog.Infof(outStr)
 		}
 	}

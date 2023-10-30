@@ -76,7 +76,7 @@ void VarUnsequencedAccessChecker::checkPreStmt(const BinaryOperator *B,
 
   QualType LHS = B->getLHS()->IgnoreCasts()->getType();
   QualType RHS = B->getRHS()->IgnoreCasts()->getType();
-  // TODO(wanghaibo): handle if LHS and RHS are invalid Expr
+  // TODO: handle if LHS and RHS are invalid Expr
   if (isVolatileAccess(LHS) && isVolatileAccess(RHS)) {
     reportBug(C);
   }
