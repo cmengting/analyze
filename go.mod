@@ -29,10 +29,3 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 )
-
-replace (
-	github.com/golang/glog => ./third_party/github.com/golang/glog
-	github.com/hhatto/gocloc => ./third_party/github.com/hhatto/gocloc
-	github.com/libgit2/git2go/v33 => ./third_party/github.com/libgit2/git2go.v33
-	github.com/securego/gosec/v2 => ./third_party/github.com/securego/gosec.v2
-)
