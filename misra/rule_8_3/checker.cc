@@ -41,7 +41,7 @@ void ReportInvalidDeclarationError(string name, string path, int line,
 void ReportError(const FunctionDecl* fd, const MatchFinder::MatchResult& result,
                  string other_loc, ResultsList* results_list,
                  const char* reason) {
-  // TODO: two locations, we hold first
+  // TODO(tianhaoyu): two locations, we hold first
   auto name = fd->getNameAsString();
   auto path = misra::libtooling_utils::GetFilename(fd, result.SourceManager);
   auto line = misra::libtooling_utils::GetLine(fd, result.SourceManager);
@@ -136,7 +136,7 @@ class FDCallback : public MatchFinder::MatchCallback {
 };
 
 void Checker::Init(ResultsList* results_list) {
-  // TODO: fix leaks when necessary
+  // TODO(tianhaoyu): fix leaks when necessary
   results_list_ = results_list;
   callback_ = new FDCallback;
   callback_->Init(&finder_, results_list);

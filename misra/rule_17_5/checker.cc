@@ -24,7 +24,7 @@ class CallExprCallback : public MatchFinder::MatchCallback {
  public:
   void Init(ResultsList* results_list, MatchFinder* finder) {
     results_list_ = results_list;
-    // TODO: cannot handle arg like expr/pointer to an array
+    // TODO(b/2735): cannot handle arg like expr/pointer to an array
     finder->addMatcher(callExpr(forEachArgumentWithParam(
                            declRefExpr(hasType(arrayType())).bind("arg_expr"),
                            parmVarDecl().bind("parm_decl"))),

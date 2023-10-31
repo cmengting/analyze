@@ -219,7 +219,7 @@ func getArmgccLibPath(osType string) string {
 	return armgccLib
 }
 
-// TODO: deprecated checker config
+// TODO(kevin): deprecated checker config
 func ParseCheckerConfig(sharedOptions *SharedOptions, numWorkers int32, cpplines int, projType analyzerinterface.ProjectType) *pb.CheckerConfiguration {
 	parsedCheckerConfig := &pb.CheckerConfiguration{}
 	err := protojson.Unmarshal([]byte(sharedOptions.GetCheckerConfig()), parsedCheckerConfig)
@@ -273,7 +273,7 @@ func ParseCheckerConfig(sharedOptions *SharedOptions, numWorkers int32, cpplines
 	parsedCheckerConfig.NumWorkers = numWorkers
 
 	if projType == analyzerinterface.Keil {
-		// TODO: remove gcc_predefined_macros hack for clang related checkers
+		// TODO(b/2879): remove gcc_predefined_macros hack for clang related checkers
 		parsedCheckerConfig.GccPredefinedMacros = *ConcatStringField("-D__GNUC__", &parsedCheckerConfig.GccPredefinedMacros)
 	}
 
@@ -297,7 +297,7 @@ func ParseCheckerConfig(sharedOptions *SharedOptions, numWorkers int32, cpplines
 		// add libstdc++ header path
 		parsedCheckerConfig.CsaSystemLibOptions = *ConcatStringField("-isystem /usr/include/c++/12", &parsedCheckerConfig.CsaSystemLibOptions)
 		parsedCheckerConfig.CsaSystemLibOptions = *ConcatStringField("-isystem /usr/include/c++/12/x86_64-redhat-linux", &parsedCheckerConfig.CsaSystemLibOptions)
-		// TODO: The following options is added for qt5 project, need remove it in future.
+		// TODO(kevin): The following options is added for qt5 project, need remove it in future.
 		parsedCheckerConfig.CsaSystemLibOptions = *ConcatStringField(
 			"-isystem /usr/include/qt5 -isystem /usr/include/qt5/QtWidgets -isystem /usr/include/qt5/QtCore -isystem /usr/include/qt5/QtGui -isystem /usr/include/qt5/QtXml",
 			&parsedCheckerConfig.CsaSystemLibOptions)

@@ -60,7 +60,7 @@ class ShiftOpChecker : public Checker<check::PreStmt<BinaryOperator> > {
     if (const auto *BT = dyn_cast<BuiltinType>(LHSType.getCanonicalType())) {
       if (BT->getKind() == BuiltinType::UInt) {
         if (IntegerLiteral *intLiteral = dyn_cast<IntegerLiteral>(B->getLHS())){
-          // TODO: handle different data size among architectures
+          // TODO(ao li): handle different data size among architectures
           if(intLiteral->getValue().ult(256))
             return C.isGreaterOrEqual(RHS, 8);
           if(intLiteral->getValue().ult(65536))
@@ -92,7 +92,7 @@ void ShiftOpChecker::checkPreStmt(const BinaryOperator *B,
     return;
   }
 
-  // TODO: handle if two operands are undefined
+  // TODO(wanghaibo): handle if two operands are undefined
   if (C.getSVal(B->getLHS()).isUndef()) {
     return;
   }

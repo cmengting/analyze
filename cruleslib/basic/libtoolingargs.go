@@ -33,21 +33,17 @@ const (
 	kEnumConstantLimit                  string = "EnumConstantLimit"
 	kStringCharLimit                    string = "StringCharLimit"
 	kExternIDLimit                      string = "ExternIDLimit"
-	kMacroIDLimit                       string = "MacroIDLimit"
-	kMacroParmLimit                     string = "MacroParmLimit"
 )
 
 var libtoolingExtraArgsMap = map[string][]string{
 	"misra_c_2012/rule_1_1": {kStructMemberLimit, kFunctionParmLimit, kFunctionArgLimit,
-		kNestedRecordLimit, kNestedExprLimit, kSwitchCaseLimit, kEnumConstantLimit,
-		kStringCharLimit, kExternIDLimit, kCaseSensitive, kLimit, kMacroIDLimit,
-		kMacroParmLimit},
+		kNestedRecordLimit, kNestedExprLimit, kSwitchCaseLimit,
+		kEnumConstantLimit, kStringCharLimit, kExternIDLimit},
 	"misra_c_2012/rule_5_1":  {kCaseSensitive, kLimit},
 	"misra_c_2012/rule_13_2": {kAggressiveMode},
 	"misra/rule_1_1": {kStructMemberLimit, kFunctionParmLimit, kFunctionArgLimit,
-		kNestedRecordLimit, kNestedExprLimit, kSwitchCaseLimit, kEnumConstantLimit,
-		kStringCharLimit, kExternIDLimit, kCaseSensitive, kLimit, kMacroIDLimit,
-		kMacroParmLimit},
+		kNestedRecordLimit, kNestedExprLimit, kSwitchCaseLimit,
+		kEnumConstantLimit, kStringCharLimit, kExternIDLimit},
 	"misra/rule_5_1":  {kCaseSensitive, kLimit},
 	"misra/rule_13_2": {kAggressiveMode},
 	"googlecpp/g1155": {kMaximumInlineFuncLine},

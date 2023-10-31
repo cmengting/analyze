@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+# Copyright 2022 Naive Systems Ltd.
+#
+# This software contains information and intellectual property that is
+# confidential and proprietary to Naive Systems Ltd. and its affiliates.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+makeruledir() {
+        if [[ -d "rule_$1" ]]; then
+                return
+        fi
+        mkdir -p "rule_$1"
+        cat >"rule_$1/rule_$1.go" <<EOF
+/*
+Copyright 2022 Naive Systems Ltd.
+
+This software contains information and intellectual property that is
+confidential and proprietary to Naive Systems Ltd. and its affiliates.
+*/
+
+package rule_$1
+
+import (
+	pb "naive.systems/analyzer/analyzer/proto"
+    "naive.systems/analyzer/cruleslib/options"
+)
+
+func Analyze(srcdir string, opts *options.CheckOptions) (*pb.ResultsList, error) {
+	results := &pb.ResultsList{}
+	return results, nil
+}
+EOF
+}
+
+makeruledirs() {
+	cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+        for rule in `cat ./scripts/rulelist`
+        do
+            makeruledir "${rule}"
+        done
+}
+
+makeruledirs "$@"

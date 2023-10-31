@@ -276,7 +276,7 @@ func Check17_2(srcDir, compileCommandsPath string, buildActions *[]csa.BuildActi
 	}
 	QueryCommands := []string{}
 	circles := callgraph.GetCircles()
-	// TODO: GetCircles not always return the same result, Bug-Id: 12501
+	// TODO(zhangzihan): GetCircles not always return the same result, Bug-Id: 12501
 	for _, circle := range circles {
 		head := circle[0]
 		for _, node := range circle {

@@ -2028,7 +2028,7 @@ class MisraChecker:
                 ifndef_name_by_file[directive.file] = ""
             # check the pairing of #ifndef, #define
             if directive.str.startswith('#ifndef '):
-                # TODO: Check whether there are any other codees
+                # TODO(b/7875): Check whether there are any other codees
                 # (except comments) in the start of the header file.
                 if ifndef_name_by_file[directive.file] != '':
                     # #ifndef exists when another #ifndef is seen
@@ -3236,7 +3236,12 @@ class MisraChecker:
                 continue
             if is_constant_integer_expression(token.astOperand1):
                 continue
-            e2 = getEssentialTypeCategory(token.astOperand1)
+            if token.astOperand1.str == '~':
+                e2 = getEssentialTypeCategory(token.astOperand1.astOperand1)
+            else:
+                e2, e3 = getEssentialCategorylist(token.astOperand1.astOperand1, token.astOperand1.astOperand2)
+                if e2 != e3:
+                    continue
             e1 = getEssentialTypeCategory(token)
             if e1 != e2:
                 self.reportError(token, 10, 8)
@@ -6074,7 +6079,7 @@ class MisraChecker:
                 # If there is a paired #define, this value will be modified to True,
                 # otherwise leave it as False.
                 if_stack[directive.file].append(False)
-                # TODO: Check whether there are any other codees
+                # TODO(b/7875): Check whether there are any other codees
                 # (except comments) in the start of the header file.
                 if ifndef_name_by_file[directive.file] != '':
                     # #ifndef exists when another #ifndef is seen
@@ -6104,7 +6109,7 @@ class MisraChecker:
                 if_stack[directive.file][-1] = True
             elif directive.str == '#endif':
                 isIncludeGuards = if_stack[directive.file].pop()
-                # TODO: Check whether there are any other codees
+                # TODO(b/7875): Check whether there are any other codees
                 # (except comments) in the end of the header file.
                 if define_name_by_file[directive.file] == '':
                     # #define does not exist when #endif is seen
@@ -6198,7 +6203,7 @@ class MisraChecker:
                     # If there is a paired #define, this value will be modified to True,
                     # otherwise leave it as False.
                     if_stack[directive.file].append(False)
-                    # TODO: Check whether there are any other codees
+                    # TODO(b/7875): Check whether there are any other codees
                     # (except comments) in the start of the header file.
                     if ifndef_name_by_file[directive.file] != '':
                         # #ifndef exists when another #ifndef is seen
@@ -6225,7 +6230,7 @@ class MisraChecker:
                     self.reportCXXError(directive, 16, 2, 2)
                 elif directive.str == '#endif':
                     isIncludeGuards = if_stack[directive.file].pop()
-                    # TODO: Check whether there are any other codees
+                    # TODO(b/7875): Check whether there are any other codees
                     # (except comments) in the end of the header file.
                     if define_name_by_file[directive.file] == '':
                         # #define does not exist when #endif is seen

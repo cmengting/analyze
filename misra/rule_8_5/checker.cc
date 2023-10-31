@@ -179,7 +179,7 @@ class FDCallback : public MatchFinder::MatchCallback {
 };
 
 void Checker::Init(ResultsList* results_list) {
-  // TODO: fix leaks when necessary
+  // TODO(tianhaoyu): fix leaks when necessary
   results_list_ = results_list;
   fdcallback_ = new FDCallback;
   fdcallback_->Init(results_list_, &finder_);

@@ -377,7 +377,7 @@ func PerformPreAnalysis(ctuDir string, actions *[]csaBuildAction, config *pb.Che
 	if err != nil {
 		glog.Errorf("createGlobalCTUFunctionMap: %v", err)
 	}
-	// TODO: perform pre-analysis in a multi-processing way
+	// TODO(b/5208): perform pre-analysis in a multi-processing way
 	mergeElapsed := time.Since(mergeStart)
 	if checkProgress {
 		timeUsed := basic.FormatTimeDuration(mergeElapsed)

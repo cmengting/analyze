@@ -17,10 +17,6 @@ import (
 )
 
 func Analyze(srcdir string, opts *options.CheckOptions) (*pb.ResultsList, error) {
-	if opts.JsonOption.Standard == "c99" || opts.JsonOption.Standard == "c11" {
-		return &pb.ResultsList{}, nil
-	}
-
 	// Clangsema
 	diagnostics, err := runner.RunClangSema(srcdir, "-Wimplicit-function-declaration", opts)
 	if err != nil {
