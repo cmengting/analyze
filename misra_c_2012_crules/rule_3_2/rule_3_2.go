@@ -18,6 +18,10 @@ import (
 )
 
 func Analyze(srcdir string, opts *options.CheckOptions) (*pb.ResultsList, error) {
+	if opts.JsonOption.Standard == "c99" || opts.JsonOption.Standard == "c11" {
+		return &pb.ResultsList{}, nil
+	}
+
 	results, err := runner.RunCppcheck(srcdir, "misra_c_2012/rule_3_2", checker_integration.Cppcheck_STU, opts)
 	if err != nil {
 		glog.Error(err)

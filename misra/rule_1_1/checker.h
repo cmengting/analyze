@@ -33,6 +33,7 @@ struct LimitList {
   int string_char_limit;
   int extern_id_limit;
   int macro_id_limit;
+  int macro_parm_limit;
 };
 
 class StructMemberCallback;

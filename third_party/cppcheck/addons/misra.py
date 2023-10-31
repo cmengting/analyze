@@ -3236,12 +3236,7 @@ class MisraChecker:
                 continue
             if is_constant_integer_expression(token.astOperand1):
                 continue
-            if token.astOperand1.str == '~':
-                e2 = getEssentialTypeCategory(token.astOperand1.astOperand1)
-            else:
-                e2, e3 = getEssentialCategorylist(token.astOperand1.astOperand1, token.astOperand1.astOperand2)
-                if e2 != e3:
-                    continue
+            e2 = getEssentialTypeCategory(token.astOperand1)
             e1 = getEssentialTypeCategory(token)
             if e1 != e2:
                 self.reportError(token, 10, 8)

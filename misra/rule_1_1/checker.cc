@@ -143,6 +143,18 @@ void ReportMacroIDError(int macro_id_limit, int macro_id_count, string path,
   pb_result->set_macro_id_count(to_string(macro_id_count));
 }
 
+void ReportMacroParmError(int macro_parm_limit, int macro_parm_count,
+                          string macro_id, string path, int line_number,
+                          ResultsList* results_list) {
+  analyzer::proto::Result* pb_result =
+      AddResultToResultsList(results_list, path, line_number, error_message);
+  pb_result->set_error_kind(
+      analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_1_1_MACRO_PARM);
+  pb_result->set_macro_parm_limit(to_string(macro_parm_limit));
+  pb_result->set_macro_parm_count(to_string(macro_parm_count));
+  pb_result->set_name(macro_id);
+}
+
 }  // namespace
 
 namespace misra {
@@ -464,10 +476,16 @@ void PreprocessConsumer::HandleTranslationUnit(ASTContext& context) {
     const MacroInfo* info = pp.getMacroInfo(macro.getFirst());
     if (!info) continue;
     SourceLocation sl = info->getDefinitionLoc();
+    unsigned macro_parm_count = info->getNumParams();
     if (sl.isValid() && !sm.isInSystemHeader(sl) && !sm.isInSystemMacro(sl) &&
         !info->isBuiltinMacro() && sm.isInMainFile(sl)) {
       string macro_id = macro.first->getName().str();
       macro_ids.insert(macro_id);
+      if (macro_parm_count > limits_.macro_parm_limit)
+        ReportMacroParmError(
+            limits_.macro_parm_limit, macro_parm_count, macro_id,
+            libtooling_utils::GetLocationFilename(sl, &sm),
+            libtooling_utils::GetLocationLine(sl, &sm), results_list_);
     }
   }
   if (macro_ids.size() > limits_.macro_id_limit)

@@ -32,6 +32,7 @@ extern cl::opt<int> enum_constant_limit;
 extern cl::opt<int> string_char_limit;
 extern cl::opt<int> extern_id_limit;
 extern cl::opt<int> macro_id_limit;
+extern cl::opt<int> macro_parm_limit;
 
 namespace misra {
 namespace rule_1_1 {
@@ -61,7 +62,7 @@ int rule_1_1(int argc, char** argv) {
   LimitList limits{struct_member_limit, function_parm_limit, function_arg_limit,
                    nested_record_limit, nested_expr_limit,   switch_case_limit,
                    enum_constant_limit, string_char_limit,   extern_id_limit,
-                   macro_id_limit};
+                   macro_id_limit,      macro_parm_limit};
   ast_checker.Init(limits, &all_results);
   int status =
       tool.run(newFrontendActionFactory(ast_checker.GetMatchFinder()).get());
