@@ -185,7 +185,7 @@ class ExternalFDCallback : public MatchFinder::MatchCallback {
 
 void Checker::Init(int prefix_length, bool case_sensitive,
                    ResultsList* results_list) {
-  // TODO(xjia): fix leaks when necessary
+  // TODO: fix leaks when necessary
   results_list_ = results_list;
   external_vd_callback_ = new ExternalVDCallback;
   external_vd_callback_->Init(prefix_length, case_sensitive, &name_locations_,

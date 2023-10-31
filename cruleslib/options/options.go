@@ -22,7 +22,7 @@ import (
 )
 
 type CheckOptions struct {
-	JsonOption         checkrule.JSONOption // TODO(zry): remove
+	JsonOption         checkrule.JSONOption // TODO: remove
 	EnvOption          EnvOptions
 	RuleSpecificOption RuleSpecificOptions
 }
@@ -76,7 +76,7 @@ func NewRuleSpecificOptions(ruleName string, generalResultsDir string) *RuleSpec
 	if err != nil {
 		glog.Fatalf("failed to create result dir: %v", err)
 	}
-	// TODO(zry): manage individual output dir here
+	// TODO: manage individual output dir here
 	options.RuleSpecificResultDir = resultsDir
 	options.CSAResultDir = resultsDir
 	options.InferResultDir = resultsDir
@@ -131,7 +131,7 @@ func NewEnvOptions(
 
 	compileCommandsPath := GetCompileCommandsPath(srcdir)
 	if !isDev {
-		// TODO(kevin): there still some duplicated action which remove ignore files twice.
+		// TODO: there still some duplicated action which remove ignore files twice.
 		actualCompileCommandsPath, err := analyzerinterface.GenerateActualCCJsonByRemoveIgnoreFiles(compileCommandsPath, ignoreDirPatterns)
 		if err != nil {
 			glog.Fatalf("analyzerinterface.GenerateActualCCJsonByRemoveIgnoreFiles(: %v", err)
@@ -157,7 +157,7 @@ func NewEnvOptions(
 		return nil
 	}
 
-	// TODO(zry): fill actually used checkers
+	// TODO: fill actually used checkers
 	usedCheckers := map[checker_integration.Checker]bool{
 		checker_integration.Cppcheck_STU: true,
 		checker_integration.Cppcheck_CTU: true,
@@ -186,7 +186,7 @@ func NewEnvOptions(
 	return envOptions
 }
 
-// TODO(zry): deprecate checkerConfig after rule transfer
+// TODO: deprecate checkerConfig after rule transfer
 func NewEnvOptionsFromShared(
 	standardSet map[string]bool,
 	logDir string,

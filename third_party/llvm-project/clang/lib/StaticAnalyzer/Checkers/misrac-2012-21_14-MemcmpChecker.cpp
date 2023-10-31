@@ -140,7 +140,7 @@ private:
   bool checkZeroInBuffer(SVal Buffer, SVal Size, CheckerContext &C) const {
     const MemRegion *R = Buffer.getAsRegion();
     if (!isa_and_nonnull<ElementRegion>(R)) {
-      //TODO(zry): settle down whether to report undecidable input length
+      //TODO: settle down whether to report undecidable input length
       return false;
     }
 
@@ -158,7 +158,7 @@ private:
 
     ProgramStateRef state = C.getState();
 
-    // TODO(zry): handle the case when Size is undecidable
+    // TODO: handle the case when Size is undecidable
     auto EC = Size.getAs<DefinedOrUnknownSVal>();
     if (!EC) {
       return false;
