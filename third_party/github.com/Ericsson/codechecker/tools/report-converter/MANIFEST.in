@@ -1,3 +1,0 @@
-include README.md
-include *.txt
-recursive-include codechecker_report_converter/report/output/html/static *

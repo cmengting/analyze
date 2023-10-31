@@ -1,2 +1,0 @@
-recursive-include build_dist/CodeChecker/lib/python3/codechecker_report_converter/report/output/html/static *
-include LICENSE.TXT

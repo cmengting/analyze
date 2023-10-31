@@ -1,7 +1,0 @@
-[
-	{
-		"directory": "PLACEHOLDER",
-		"command": "g++ @ldlogger\\ response.rsp /tmp/a.cpp -o /tmp/a.out",
-		"file": "/tmp/a.cpp"
-	}
-]
