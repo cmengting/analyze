@@ -1,0 +1,12 @@
+name: Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: dimerun-h9-ubuntu2204
+    steps:
+    - uses: actions/checkout@v4
+    - name: make
+      run: make
