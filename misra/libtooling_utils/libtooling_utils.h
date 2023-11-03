@@ -11,6 +11,7 @@ confidential and proprietary to Naive Systems Ltd. and its affiliates.
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <clang/AST/StmtVisitor.h>
 #include <clang/ASTMatchers/ASTMatchFinder.h>
+#include <clang/Lex/Lexer.h>
 
 #include <unordered_map>
 
@@ -175,13 +176,19 @@ const auto sideEffectInBinaryOpInMemberFunc = anyOf(
 
 class ConstCallExprVisitor : public ConstStmtVisitor<ConstCallExprVisitor> {
  public:
+  ConstCallExprVisitor(ASTContext* ctx) : ctx_(ctx){};
   void Visit(const Stmt* Node);
   void VisitCallExpr(const CallExpr* Call);
+  bool ShouldReport(bool aggressive_mode);
   bool hasCallExpr = false;
   // `hasDirectCall` is marked when callee is not function pointer.
   bool hasDirectCall = false;
   // `hasPersistentSideEffects` is marked when calling fuctions that have PSE.
   bool hasPersistentSideEffects = false;
+
+ private:
+  ASTContext* ctx_;
+  void Visit_(const Stmt* Node, bool* HasCallExprChild);
 };
 
 class ASTVisitor : public RecursiveASTVisitor<ASTVisitor> {
@@ -249,6 +256,8 @@ class ASTVisitor : public RecursiveASTVisitor<ASTVisitor> {
   vector<const BinaryOperator*> binaryOps{};
   vector<const FunctionDecl*> funcDecls{};
 };
+
+string GetExprName(const Expr* expr, SourceManager* sm, ASTContext* context);
 
 }  // namespace libtooling_utils
 }  // namespace misra

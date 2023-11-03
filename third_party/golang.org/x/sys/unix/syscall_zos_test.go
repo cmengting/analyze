@@ -8,10 +8,9 @@
 package unix_test
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -125,11 +124,10 @@ func TestSignalNum(t *testing.T) {
 
 func TestFcntlInt(t *testing.T) {
 	t.Parallel()
-	file, err := ioutil.TempFile("", "TestFnctlInt")
+	file, err := os.Create(filepath.Join(t.TempDir(), "TestFnctlInt"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(file.Name())
 	defer file.Close()
 	f := file.Fd()
 	flags, err := unix.FcntlInt(f, unix.F_GETFD, 0)
@@ -144,12 +142,11 @@ func TestFcntlInt(t *testing.T) {
 // TestFcntlFlock tests whether the file locking structure matches
 // the calling convention of each kernel.
 func TestFcntlFlock(t *testing.T) {
-	name := filepath.Join(os.TempDir(), "TestFcntlFlock")
+	name := filepath.Join(t.TempDir(), "TestFcntlFlock")
 	fd, err := unix.Open(name, unix.O_CREAT|unix.O_RDWR|unix.O_CLOEXEC, 0)
 	if err != nil {
 		t.Fatalf("Open failed: %v", err)
 	}
-	defer unix.Unlink(name)
 	defer unix.Close(fd)
 	flock := unix.Flock_t{
 		Type:  unix.F_RDLCK,
@@ -198,12 +195,6 @@ func TestPassFD(t *testing.T) {
 		}
 	}
 
-	tempDir, err := ioutil.TempDir("", "TestPassFD")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tempDir)
-
 	fds, err := unix.Socketpair(unix.AF_LOCAL, unix.SOCK_STREAM, 0)
 	if err != nil {
 		t.Fatalf("Socketpair: %v", err)
@@ -213,7 +204,7 @@ func TestPassFD(t *testing.T) {
 	defer writeFile.Close()
 	defer readFile.Close()
 
-	cmd := exec.Command(os.Args[0], "-test.run=^TestPassFD$", "--", tempDir)
+	cmd := exec.Command(os.Args[0], "-test.run=^TestPassFD$", "--", t.TempDir())
 	cmd.Env = []string{"GO_WANT_HELPER_PROCESS=1"}
 	if lp := os.Getenv("LD_LIBRARY_PATH"); lp != "" {
 		cmd.Env = append(cmd.Env, "LD_LIBRARY_PATH="+lp)
@@ -267,7 +258,7 @@ func TestPassFD(t *testing.T) {
 	f := os.NewFile(uintptr(gotFds[0]), "fd-from-child")
 	defer f.Close()
 
-	got, err := ioutil.ReadAll(f)
+	got, err := io.ReadAll(f)
 	want := "Hello from child process!\n"
 	if string(got) != want {
 		t.Errorf("child process ReadAll: %q, %v; want %q", got, err, want)
@@ -299,9 +290,9 @@ func passFDChild() {
 	// We make it in tempDir, which our parent will clean up.
 	flag.Parse()
 	tempDir := flag.Arg(0)
-	f, err := ioutil.TempFile(tempDir, "")
+	f, err := os.Create(filepath.Join(tempDir, "file"))
 	if err != nil {
-		fmt.Printf("TempFile: %v", err)
+		fmt.Println(err)
 		return
 	}
 
@@ -432,11 +423,10 @@ func TestSetsockoptString(t *testing.T) {
 }
 
 func TestDup(t *testing.T) {
-	file, err := ioutil.TempFile("", "TestDup")
+	file, err := os.Create(filepath.Join(t.TempDir(), "TestDup"))
 	if err != nil {
-		t.Fatalf("Tempfile failed: %v", err)
+		t.Fatal(err)
 	}
-	defer os.Remove(file.Name())
 	defer file.Close()
 	f := int(file.Fd())
 
@@ -494,15 +484,7 @@ func TestGetwd(t *testing.T) {
 	case "darwin":
 		switch runtime.GOARCH {
 		case "arm64":
-			d1, err := ioutil.TempDir("", "d1")
-			if err != nil {
-				t.Fatalf("TempDir: %v", err)
-			}
-			d2, err := ioutil.TempDir("", "d2")
-			if err != nil {
-				t.Fatalf("TempDir: %v", err)
-			}
-			dirs = []string{d1, d2}
+			dirs = []string{t.TempDir(), t.TempDir()}
 		}
 	}
 	oldwd := os.Getenv("PWD")
@@ -554,68 +536,7 @@ func TestMkdev(t *testing.T) {
 	}
 }
 
-// mktmpfifo creates a temporary FIFO and provides a cleanup function.
-func mktmpfifo(t *testing.T) (*os.File, func()) {
-	err := unix.Mkfifo("fifo", 0666)
-	if err != nil {
-		t.Fatalf("mktmpfifo: failed to create FIFO: %v", err)
-	}
-
-	f, err := os.OpenFile("fifo", os.O_RDWR, 0666)
-	if err != nil {
-		os.Remove("fifo")
-		t.Fatalf("mktmpfifo: failed to open FIFO: %v", err)
-	}
-
-	return f, func() {
-		f.Close()
-		os.Remove("fifo")
-	}
-}
-
-// utilities taken from os/os_test.go
-
-func touch(t *testing.T, name string) {
-	f, err := os.Create(name)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := f.Close(); err != nil {
-		t.Fatal(err)
-	}
-}
-
-// chtmpdir changes the working directory to a new temporary directory and
-// provides a cleanup function. Used when PWD is read-only.
-func chtmpdir(t *testing.T) func() {
-	oldwd, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("chtmpdir: %v", err)
-	}
-	d, err := ioutil.TempDir("", "test")
-	if err != nil {
-		t.Fatalf("chtmpdir: %v", err)
-	}
-	if err := os.Chdir(d); err != nil {
-		t.Fatalf("chtmpdir: %v", err)
-	}
-	return func() {
-		if err := os.Chdir(oldwd); err != nil {
-			t.Fatalf("chtmpdir: %v", err)
-		}
-		os.RemoveAll(d)
-	}
-}
-
 func TestMountUnmount(t *testing.T) {
-	b2s := func(arr []byte) string {
-		nulli := bytes.IndexByte(arr, 0)
-		if nulli == -1 {
-			return string(arr)
-		} else {
-			return string(arr[:nulli])
-		}
-	}
 	// use an available fs
 	var buffer struct {
 		header unix.W_Mnth
@@ -632,7 +553,7 @@ func TestMountUnmount(t *testing.T) {
 	var mountpoint string
 	var available bool = false
 	for i := 0; i < fsCount; i++ {
-		err = unix.Unmount(b2s(buffer.fsinfo[i].Mountpoint[:]), unix.MTM_RDWR)
+		err = unix.Unmount(unix.ByteSliceToString(buffer.fsinfo[i].Mountpoint[:]), unix.MTM_RDWR)
 		if err != nil {
 			// Unmount and Mount require elevated privilege
 			// If test is run without such permission, skip test
@@ -646,9 +567,9 @@ func TestMountUnmount(t *testing.T) {
 			}
 		} else {
 			available = true
-			fs = b2s(buffer.fsinfo[i].Fsname[:])
-			fstype = b2s(buffer.fsinfo[i].Fstname[:])
-			mountpoint = b2s(buffer.fsinfo[i].Mountpoint[:])
+			fs = unix.ByteSliceToString(buffer.fsinfo[i].Fsname[:])
+			fstype = unix.ByteSliceToString(buffer.fsinfo[i].Fstname[:])
+			mountpoint = unix.ByteSliceToString(buffer.fsinfo[i].Mountpoint[:])
 			t.Logf("using file system = %s; fstype = %s and mountpoint = %s\n", fs, fstype, mountpoint)
 			break
 		}
@@ -663,7 +584,7 @@ func TestMountUnmount(t *testing.T) {
 		t.Fatalf("W_Getmntent_A returns with error: %s", err.Error())
 	}
 	for i := 0; i < fsCount; i++ {
-		if b2s(buffer.fsinfo[i].Fsname[:]) == fs {
+		if unix.ByteSliceToString(buffer.fsinfo[i].Fsname[:]) == fs {
 			t.Fatalf("File system found after unmount")
 		}
 	}
@@ -679,7 +600,8 @@ func TestMountUnmount(t *testing.T) {
 	}
 	fsMounted := false
 	for i := 0; i < fsCount; i++ {
-		if b2s(buffer.fsinfo[i].Fsname[:]) == fs && b2s(buffer.fsinfo[i].Mountpoint[:]) == mountpoint {
+		if unix.ByteSliceToString(buffer.fsinfo[i].Fsname[:]) == fs &&
+			unix.ByteSliceToString(buffer.fsinfo[i].Mountpoint[:]) == mountpoint {
 			fsMounted = true
 		}
 	}
@@ -690,14 +612,10 @@ func TestMountUnmount(t *testing.T) {
 
 func TestChroot(t *testing.T) {
 	// create temp dir and tempfile 1
-	tempDir, err := ioutil.TempDir("", "TestChroot")
+	tempDir := t.TempDir()
+	f, err := os.Create(filepath.Join(tempDir, "chroot_test_file"))
 	if err != nil {
-		t.Fatalf("TempDir: %s", err.Error())
-	}
-	defer os.RemoveAll(tempDir)
-	f, err := ioutil.TempFile(tempDir, "chroot_test_file")
-	if err != nil {
-		t.Fatalf("TempFile: %s", err.Error())
+		t.Fatal(err)
 	}
 	// chroot temp dir
 	err = unix.Chroot(tempDir)
@@ -710,7 +628,7 @@ func TestChroot(t *testing.T) {
 		t.Fatalf("Chroot: %s", err.Error())
 	}
 	// check if tempDir contains test file
-	files, err := ioutil.ReadDir("/")
+	files, err := os.ReadDir("/")
 	if err != nil {
 		t.Fatalf("ReadDir: %s", err.Error())
 	}
@@ -747,14 +665,9 @@ func TestFlock(t *testing.T) {
 		}
 	} else {
 		// create temp dir and tempfile 1
-		tempDir, err := ioutil.TempDir("", "TestFlock")
+		f, err := os.Create(filepath.Join(t.TempDir(), "flock_test_file"))
 		if err != nil {
-			t.Fatalf("TempDir: %s", err.Error())
-		}
-		defer os.RemoveAll(tempDir)
-		f, err := ioutil.TempFile(tempDir, "flock_test_file")
-		if err != nil {
-			t.Fatalf("TempFile: %s", err.Error())
+			t.Fatal(err)
 		}
 		fd := int(f.Fd())
 
@@ -765,7 +678,7 @@ func TestFlock(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Flock: %s", err.Error())
 		}
-		cmd := exec.Command(os.Args[0], "-test.run=TestFlock", f.Name())
+		cmd := exec.Command(os.Args[0], "-test.run=^TestFlock$", f.Name())
 		cmd.Env = append(os.Environ(), "GO_WANT_HELPER_PROCESS=1")
 		out, err := cmd.CombinedOutput()
 		if len(out) > 0 || err != nil {

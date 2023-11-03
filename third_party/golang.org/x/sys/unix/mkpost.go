@@ -16,7 +16,7 @@ import (
 	"bytes"
 	"fmt"
 	"go/format"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"regexp"
@@ -24,7 +24,10 @@ import (
 
 func main() {
 	// Get the OS and architecture (using GOARCH_TARGET if it exists)
-	goos := os.Getenv("GOOS")
+	goos := os.Getenv("GOOS_TARGET")
+	if goos == "" {
+		goos = os.Getenv("GOOS")
+	}
 	goarch := os.Getenv("GOARCH_TARGET")
 	if goarch == "" {
 		goarch = os.Getenv("GOARCH")
@@ -38,7 +41,7 @@ func main() {
 		}
 	}
 
-	b, err := ioutil.ReadAll(os.Stdin)
+	b, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,6 +73,51 @@ func main() {
 		b = convertEprocRegex.ReplaceAll(b, []byte("$1$2[$3]byte"))
 	}
 
+	if goos == "freebsd" {
+		// Inside PtraceLwpInfoStruct replace __Siginfo with __PtraceSiginfo,
+		// Create __PtraceSiginfo as a copy of __Siginfo where every *byte instance is replaced by uintptr
+		ptraceLwpInfoStruct := regexp.MustCompile(`(?s:type PtraceLwpInfoStruct struct \{.*?\})`)
+		b = ptraceLwpInfoStruct.ReplaceAllFunc(b, func(in []byte) []byte {
+			return bytes.ReplaceAll(in, []byte("__Siginfo"), []byte("__PtraceSiginfo"))
+		})
+
+		siginfoStruct := regexp.MustCompile(`(?s:type __Siginfo struct \{.*?\})`)
+		b = siginfoStruct.ReplaceAllFunc(b, func(in []byte) []byte {
+			out := append([]byte{}, in...)
+			out = append(out, '\n', '\n')
+			out = append(out,
+				bytes.ReplaceAll(
+					bytes.ReplaceAll(in, []byte("__Siginfo"), []byte("__PtraceSiginfo")),
+					[]byte("*byte"), []byte("uintptr"))...)
+			return out
+		})
+
+		// Inside PtraceIoDesc replace the Offs field, which refers to an address
+		// in the child process (not the Go parent), with a uintptr.
+		ptraceIoDescStruct := regexp.MustCompile(`(?s:type PtraceIoDesc struct \{.*?\})`)
+		addrField := regexp.MustCompile(`(\bOffs\s+)\*byte`)
+		b = ptraceIoDescStruct.ReplaceAllFunc(b, func(in []byte) []byte {
+			return addrField.ReplaceAll(in, []byte(`${1}uintptr`))
+		})
+	}
+
+	if goos == "solaris" {
+		// Convert *int8 to *byte in Iovec.Base like on every other platform.
+		convertIovecBase := regexp.MustCompile(`Base\s+\*int8`)
+		iovecType := regexp.MustCompile(`type Iovec struct {[^}]*}`)
+		iovecStructs := iovecType.FindAll(b, -1)
+		for _, s := range iovecStructs {
+			newNames := convertIovecBase.ReplaceAll(s, []byte("Base *byte"))
+			b = bytes.Replace(b, s, newNames, 1)
+		}
+	}
+
+	if goos == "linux" && goarch != "riscv64" {
+		// The RISCV_HWPROBE_ constants are only defined on Linux for riscv64
+		hwprobeConstRexexp := regexp.MustCompile(`const\s+\(\s+RISCV_HWPROBE_[^\)]+\)`)
+		b = hwprobeConstRexexp.ReplaceAll(b, nil)
+	}
+
 	// Intentionally export __val fields in Fsid and Sigset_t
 	valRegex := regexp.MustCompile(`type (Fsid|Sigset_t) struct {(\s+)X__(bits|val)(\s+\S+\s+)}`)
 	b = valRegex.ReplaceAll(b, []byte("type $1 struct {${2}Val$4}"))
@@ -82,10 +130,24 @@ func main() {
 	icmpV6Regex := regexp.MustCompile(`type (ICMPv6Filter) struct {(\s+)X__icmp6_filt(\s+\S+\s+)}`)
 	b = icmpV6Regex.ReplaceAll(b, []byte("type $1 struct {${2}Filt$3}"))
 
+	// Intentionally export address storage field in SockaddrStorage convert it to [N]byte.
+	convertSockaddrStorageData := regexp.MustCompile(`(X__ss_padding)\s+\[(\d+)\]u?int8`)
+	sockaddrStorageType := regexp.MustCompile(`type SockaddrStorage struct {[^}]*}`)
+	sockaddrStorageStructs := sockaddrStorageType.FindAll(b, -1)
+	for _, s := range sockaddrStorageStructs {
+		newNames := convertSockaddrStorageData.ReplaceAll(s, []byte("Data [$2]byte"))
+		b = bytes.Replace(b, s, newNames, 1)
+	}
+
 	// If we have empty Ptrace structs, we should delete them. Only s390x emits
 	// nonempty Ptrace structs.
 	ptraceRexexp := regexp.MustCompile(`type Ptrace((Psw|Fpregs|Per) struct {\s*})`)
 	b = ptraceRexexp.ReplaceAll(b, nil)
+
+	// If we have an empty RISCVHWProbePairs struct, we should delete it. Only riscv64 emits
+	// nonempty RISCVHWProbePairs structs.
+	hwprobeRexexp := regexp.MustCompile(`type RISCVHWProbePairs struct {\s*}`)
+	b = hwprobeRexexp.ReplaceAll(b, nil)
 
 	// Replace the control_regs union with a blank identifier for now.
 	controlRegsRegex := regexp.MustCompile(`(Control_regs)\s+\[0\]uint64`)
@@ -101,9 +163,9 @@ func main() {
 	convertUtsnameRegex := regexp.MustCompile(`((Sys|Node|Domain)name|Release|Version|Machine)(\s+)\[(\d+)\]u?int8`)
 	b = convertUtsnameRegex.ReplaceAll(b, []byte("$1$3[$4]byte"))
 
-	// Convert [n]int8 to [n]byte in Statvfs_t members to simplify
+	// Convert [n]int8 to [n]byte in Statvfs_t and Statfs_t members to simplify
 	// conversion to string.
-	convertStatvfsRegex := regexp.MustCompile(`((Fstype|Mnton|Mntfrom)name)(\s+)\[(\d+)\]int8`)
+	convertStatvfsRegex := regexp.MustCompile(`(([Ff]stype|[Mm]nton|[Mm]ntfrom)name|mntfromspec)(\s+)\[(\d+)\]int8`)
 	b = convertStatvfsRegex.ReplaceAll(b, []byte("$1$3[$4]byte"))
 
 	// Convert []int8 to []byte in device mapper ioctl interface

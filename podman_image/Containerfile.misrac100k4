@@ -51,7 +51,6 @@ RUN ln -s /infer/bin/infer /usr/local/bin/infer
 
 # Install Cppcheck
 COPY cppcheck /cppcheck
-RUN alias cppcheck=cppcheck/cppcheck
 
 # Install ProjectConverter
 RUN pip install -i https://mirrors.aliyun.com/pypi/simple/ lxml==4.9.1

@@ -21,6 +21,7 @@ using namespace llvm;
 extern cl::OptionCategory ns_libtooling_checker;
 static cl::extrahelp common_help(CommonOptionsParser::HelpMessage);
 extern cl::opt<std::string> results_path;
+extern cl::opt<bool> aggressive_mode;
 
 namespace misra {
 namespace rule_13_5 {
@@ -50,7 +51,7 @@ int rule_13_5(int argc, char** argv) {
   misra::rule_13_5::Checker checker;
   analyzer::proto::ResultsList all_results;
 
-  checker.Init(&all_results);
+  checker.Init(aggressive_mode, &all_results);
   int status =
       tool.run(newFrontendActionFactory(checker.GetMatchFinder()).get());
   LOG(INFO) << "libtooling status: " << status;

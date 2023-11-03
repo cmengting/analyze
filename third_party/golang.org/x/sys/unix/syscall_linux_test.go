@@ -10,16 +10,19 @@ package unix_test
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 	"unsafe"
@@ -217,14 +220,66 @@ func firstIPv4(t *testing.T, ifi *net.Interface) (net.IP, bool) {
 	return nil, false
 }
 
+func TestPidfd(t *testing.T) {
+	// Start a child process which will sleep for 1 hour; longer than the 10
+	// minute default Go test timeout.
+	cmd := exec.Command("sleep", "1h")
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("failed to exec sleep: %v", err)
+	}
+
+	fd, err := unix.PidfdOpen(cmd.Process.Pid, 0)
+	if err != nil {
+		// GOARCH arm/arm64 and GOOS android builders do not support pidfds.
+		if errors.Is(err, unix.ENOSYS) {
+			t.Skipf("skipping, pidfd_open is not implemented: %v", err)
+		}
+
+		t.Fatalf("failed to open child pidfd: %v", err)
+	}
+	defer unix.Close(fd)
+
+	// Child is running but not terminated.
+	if err := unix.Waitid(unix.P_PIDFD, fd, nil, unix.WEXITED|unix.WNOHANG, nil); err != nil {
+		if errors.Is(err, unix.EINVAL) {
+			t.Skip("skipping due to waitid EINVAL, see https://go.dev/issues/52014")
+		}
+
+		t.Fatalf("failed to check for child exit: %v", err)
+	}
+
+	const want = unix.SIGHUP
+	if err := unix.PidfdSendSignal(fd, want, nil, 0); err != nil {
+		t.Fatalf("failed to signal child process: %v", err)
+	}
+
+	// Now verify that the child process received the expected signal.
+	var eerr *exec.ExitError
+	if err := cmd.Wait(); !errors.As(err, &eerr) {
+		t.Fatalf("child process terminated but did not return an exit error: %v", err)
+	}
+
+	if err := unix.Waitid(unix.P_PIDFD, fd, nil, unix.WEXITED, nil); !errors.Is(err, unix.ECHILD) {
+		t.Fatalf("expected ECHILD for final waitid, but got: %v", err)
+	}
+
+	ws, ok := eerr.Sys().(syscall.WaitStatus)
+	if !ok {
+		t.Fatalf("expected syscall.WaitStatus value, but got: %#T", eerr.Sys())
+	}
+
+	if got := ws.Signal(); got != want {
+		t.Fatalf("unexpected child exit signal, got: %s, want: %s", got, want)
+	}
+}
+
 func TestPpoll(t *testing.T) {
 	if runtime.GOOS == "android" {
 		t.Skip("mkfifo syscall is not available on android, skipping test")
 	}
 
-	defer chtmpdir(t)()
-	f, cleanup := mktmpfifo(t)
-	defer cleanup()
+	chtmpdir(t)
+	f := mktmpfifo(t)
 
 	const timeout = 100 * time.Millisecond
 
@@ -280,7 +335,7 @@ func TestTime(t *testing.T) {
 }
 
 func TestUtime(t *testing.T) {
-	defer chtmpdir(t)()
+	chtmpdir(t)
 
 	touch(t, "file1")
 
@@ -389,6 +444,24 @@ func TestPselect(t *testing.T) {
 	}
 }
 
+func TestPselectWithSigmask(t *testing.T) {
+	var sigmask unix.Sigset_t
+	sigmask.Val[0] |= 1 << (uint(unix.SIGUSR1) - 1)
+	for {
+		n, err := unix.Pselect(0, nil, nil, nil, &unix.Timespec{Sec: 0, Nsec: 0}, &sigmask)
+		if err == unix.EINTR {
+			t.Logf("Pselect interrupted")
+			continue
+		} else if err != nil {
+			t.Fatalf("Pselect: %v", err)
+		}
+		if n != 0 {
+			t.Fatalf("Pselect: got %v ready file descriptors, expected 0", n)
+		}
+		break
+	}
+}
+
 func TestSchedSetaffinity(t *testing.T) {
 	var newMask unix.CPUSet
 	newMask.Zero()
@@ -475,7 +548,7 @@ func TestStatx(t *testing.T) {
 		t.Fatalf("Statx: %v", err)
 	}
 
-	defer chtmpdir(t)()
+	chtmpdir(t)
 	touch(t, "file1")
 
 	var st unix.Stat_t
@@ -563,7 +636,7 @@ func stringsFromByteSlice(buf []byte) []string {
 }
 
 func TestFaccessat(t *testing.T) {
-	defer chtmpdir(t)()
+	chtmpdir(t)
 	touch(t, "file1")
 
 	err := unix.Faccessat(unix.AT_FDCWD, "file1", unix.R_OK, 0)
@@ -615,11 +688,10 @@ func TestFaccessat(t *testing.T) {
 }
 
 func TestSyncFileRange(t *testing.T) {
-	file, err := ioutil.TempFile("", "TestSyncFileRange")
+	file, err := os.Create(filepath.Join(t.TempDir(), t.Name()))
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(file.Name())
 	defer file.Close()
 
 	err = unix.SyncFileRange(int(file.Fd()), 0, 0, 0)
@@ -738,7 +810,7 @@ func TestOpenByHandleAt(t *testing.T) {
 			f := os.NewFile(uintptr(fd), "")
 			defer f.Close()
 
-			slurp, err := ioutil.ReadAll(f)
+			slurp, err := io.ReadAll(f)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -815,16 +887,35 @@ func TestEpoll(t *testing.T) {
 }
 
 func TestPrctlRetInt(t *testing.T) {
-	err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)
-	if err != nil {
-		t.Skipf("Prctl: %v, skipping test", err)
+	skipc := make(chan bool, 1)
+	skip := func() {
+		skipc <- true
+		runtime.Goexit()
 	}
-	v, err := unix.PrctlRetInt(unix.PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0)
-	if err != nil {
-		t.Fatalf("failed to perform prctl: %v", err)
-	}
-	if v != 1 {
-		t.Fatalf("unexpected return from prctl; got %v, expected %v", v, 1)
+
+	go func() {
+		// This test uses prctl to modify the calling thread, so run it on its own
+		// throwaway thread and do not unlock it when the goroutine exits.
+		runtime.LockOSThread()
+		defer close(skipc)
+
+		err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)
+		if err != nil {
+			t.Logf("Prctl: %v, skipping test", err)
+			skip()
+		}
+
+		v, err := unix.PrctlRetInt(unix.PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0)
+		if err != nil {
+			t.Errorf("failed to perform prctl: %v", err)
+		}
+		if v != 1 {
+			t.Errorf("unexpected return from prctl; got %v, expected %v", v, 1)
+		}
+	}()
+
+	if <-skipc {
+		t.SkipNow()
 	}
 }
 
@@ -894,13 +985,7 @@ func TestOpenat2(t *testing.T) {
 	}
 
 	// prepare
-	tempDir, err := ioutil.TempDir("", t.Name())
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tempDir)
-
-	subdir := filepath.Join(tempDir, "dir")
+	subdir := filepath.Join(t.TempDir(), "dir")
 	if err := os.Mkdir(subdir, 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -938,12 +1023,12 @@ func TestOpenat2(t *testing.T) {
 }
 
 func TestIoctlFileDedupeRange(t *testing.T) {
-	f1, err := ioutil.TempFile("", t.Name())
+	dir := t.TempDir()
+	f1, err := os.Create(filepath.Join(dir, "f1"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f1.Close()
-	defer os.Remove(f1.Name())
 
 	// Test deduplication with two blocks of zeros
 	data := make([]byte, 4096)
@@ -955,12 +1040,11 @@ func TestIoctlFileDedupeRange(t *testing.T) {
 		}
 	}
 
-	f2, err := ioutil.TempFile("", t.Name())
+	f2, err := os.Create(filepath.Join(dir, "f2"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer f2.Close()
-	defer os.Remove(f2.Name())
 
 	for i := 0; i < 2; i += 1 {
 		// Make the 2nd block different
@@ -1023,5 +1107,118 @@ func TestIoctlFileDedupeRange(t *testing.T) {
 	if dedupe.Info[1].Bytes_deduped != 0 {
 		t.Errorf("Unexpected amount of bytes deduped %v != %v",
 			dedupe.Info[1].Bytes_deduped, 0)
+	}
+}
+
+// TestPwritevOffsets tests golang.org/issues/57291 where
+// offs2lohi was shifting by the size of long in bytes, not bits.
+func TestPwritevOffsets(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "x.txt")
+
+	f, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { f.Close() })
+
+	const (
+		off = 20
+	)
+	b := [][]byte{{byte(0)}}
+	n, err := unix.Pwritev(int(f.Fd()), b, off)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != len(b) {
+		t.Fatalf("expected to write %d, wrote %d", len(b), n)
+	}
+
+	info, err := f.Stat()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := off + int64(len(b))
+	if info.Size() != want {
+		t.Fatalf("expected size to be %d, got %d", want, info.Size())
+	}
+}
+
+func TestReadvAllocate(t *testing.T) {
+	f, err := os.Create(filepath.Join(t.TempDir(), "test"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { f.Close() })
+
+	test := func(name string, fn func(fd int)) {
+		n := int(testing.AllocsPerRun(100, func() {
+			fn(int(f.Fd()))
+		}))
+		if n != 0 {
+			t.Errorf("%q got %d allocations, want 0", name, n)
+		}
+	}
+
+	iovs := make([][]byte, 8)
+	for i := range iovs {
+		iovs[i] = []byte{'A'}
+	}
+
+	test("Writev", func(fd int) {
+		unix.Writev(fd, iovs)
+	})
+	test("Pwritev", func(fd int) {
+		unix.Pwritev(fd, iovs, 0)
+	})
+	test("Pwritev2", func(fd int) {
+		unix.Pwritev2(fd, iovs, 0, 0)
+	})
+	test("Readv", func(fd int) {
+		unix.Readv(fd, iovs)
+	})
+	test("Preadv", func(fd int) {
+		unix.Preadv(fd, iovs, 0)
+	})
+	test("Preadv2", func(fd int) {
+		unix.Preadv2(fd, iovs, 0, 0)
+	})
+}
+
+func TestSockaddrALG(t *testing.T) {
+	// Open a socket to perform SHA1 hashing.
+	fd, err := unix.Socket(unix.AF_ALG, unix.SOCK_SEQPACKET, 0)
+	if err != nil {
+		t.Skip("socket(AF_ALG):", err)
+	}
+	defer unix.Close(fd)
+	addr := &unix.SockaddrALG{Type: "hash", Name: "sha1"}
+	if err := unix.Bind(fd, addr); err != nil {
+		t.Fatal("bind:", err)
+	}
+	// Need to call accept(2) with the second and third arguments as 0,
+	// which is not possible via unix.Accept, thus the use of unix.Syscall.
+	hashfd, _, errno := unix.Syscall6(unix.SYS_ACCEPT4, uintptr(fd), 0, 0, 0, 0, 0)
+	if errno != 0 {
+		t.Fatal("accept:", errno)
+	}
+
+	hash := os.NewFile(hashfd, "sha1")
+	defer hash.Close()
+
+	// Hash an input string and read the results.
+	const (
+		input = "Hello, world."
+		exp   = "2ae01472317d1935a84797ec1983ae243fc6aa28"
+	)
+	if _, err := hash.WriteString(input); err != nil {
+		t.Fatal(err)
+	}
+	b := make([]byte, 20)
+	if _, err := hash.Read(b); err != nil {
+		t.Fatal(err)
+	}
+	got := hex.EncodeToString(b)
+	if got != exp {
+		t.Fatalf("got: %q, want: %q", got, exp)
 	}
 }

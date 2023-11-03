@@ -18,7 +18,7 @@ class CastCallback;
 
 class Checker {
  public:
-  void Init(analyzer::proto::ResultsList* results_list);
+  void Init(bool aggressive_mode, analyzer::proto::ResultsList* results_list);
 
   clang::ast_matchers::MatchFinder* GetMatchFinder() { return &finder_; }
 

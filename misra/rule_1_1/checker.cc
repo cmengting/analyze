@@ -63,6 +63,17 @@ void ReportFunctionArgError(int function_arg_limit, int function_arg_count,
   pb_result->set_name(call_expr);
 }
 
+void ReportNestedBlockError(int nested_block_limit, int nested_block_count,
+                            string path, int line_number,
+                            ResultsList* results_list) {
+  analyzer::proto::Result* pb_result =
+      AddResultToResultsList(results_list, path, line_number, error_message);
+  pb_result->set_error_kind(
+      analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_1_1_NESTED_BLOCK);
+  pb_result->set_nested_block_limit(to_string(nested_block_limit));
+  pb_result->set_nested_block_count(to_string(nested_block_count));
+}
+
 void ReportNestedRecordError(int nested_record_limit, int nested_record_count,
                              string record_name, string path, int line_number,
                              ResultsList* results_list) {
@@ -153,6 +164,31 @@ void ReportMacroParmError(int macro_parm_limit, int macro_parm_count,
   pb_result->set_macro_parm_limit(to_string(macro_parm_limit));
   pb_result->set_macro_parm_count(to_string(macro_parm_count));
   pb_result->set_name(macro_id);
+}
+
+void ReportMacroArgError(int macro_arg_limit, int macro_arg_count,
+                         string macro_id, string path, int line_number,
+                         ResultsList* results_list) {
+  analyzer::proto::Result* pb_result =
+      AddResultToResultsList(results_list, path, line_number, error_message);
+  pb_result->set_error_kind(
+      analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_1_1_MACRO_ARG);
+  pb_result->set_macro_arg_limit(to_string(macro_arg_limit));
+  pb_result->set_macro_arg_count(to_string(macro_arg_limit));
+  pb_result->set_name(macro_id);
+}
+
+void ReportNestedIncludeError(int nested_include_limit,
+                              int nested_include_count, string file_name,
+                              string path, int line_number,
+                              ResultsList* results_list) {
+  analyzer::proto::Result* pb_result =
+      AddResultToResultsList(results_list, path, line_number, error_message);
+  pb_result->set_error_kind(
+      analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_1_1_NESTED_INCLUDE);
+  pb_result->set_nested_include_limit(to_string(nested_include_limit));
+  pb_result->set_nested_include_count(to_string(nested_include_count));
+  pb_result->set_name(file_name);
 }
 
 }  // namespace
@@ -437,35 +473,139 @@ class ExternIDCallback : public MatchFinder::MatchCallback {
   ResultsList* results_list_;
 };
 
-void ASTChecker::Init(LimitList limits, ResultsList* results_list) {
+struct Loc {
+  string file;
+  int line;
+};
+
+std::map<string, std::stack<Loc>> nested_blocks;
+
+class NestedBlockCallback : public MatchFinder::MatchCallback {
+ public:
+  void Init(int nested_block_limit, ResultsList* results_list,
+            MatchFinder* finder) {
+    nested_block_limit_ = nested_block_limit;
+    results_list_ = results_list;
+    finder->addMatcher(
+        compoundStmt(unless(isExpansionInSystemHeader()),
+                     forEachDescendant(
+                         compoundStmt(unless(hasDescendant(compoundStmt())))
+                             .bind("innermost_cstmt")))
+            .bind("cstmt"),
+        this);
+  }
+
+  void run(const MatchFinder::MatchResult& result) override {
+    const CompoundStmt* cstmt = result.Nodes.getNodeAs<CompoundStmt>("cstmt");
+    const CompoundStmt* innermost_cstmt =
+        result.Nodes.getNodeAs<CompoundStmt>("innermost_cstmt");
+    if (cstmt && innermost_cstmt) {
+      // the loc is in a format as file:line:column, which is unique for a block
+      string loc =
+          innermost_cstmt->getLBracLoc().printToString(*result.SourceManager);
+      nested_blocks[loc].push(
+          Loc{libtooling_utils::GetFilename(cstmt, result.SourceManager),
+              libtooling_utils::GetLine(cstmt, result.SourceManager)});
+    }
+  }
+
+  void Report() {
+    for (auto it = nested_blocks.begin(); it != nested_blocks.end(); ++it) {
+      std::stack<Loc> block_stack = it->second;
+      // use '<': the block_stack does not store the innermost block
+      if (block_stack.size() < nested_block_limit_) {
+        continue;
+      }
+      // 1: the innermost block
+      int nested_block_count = block_stack.size() + 1;
+      int count = 1;
+      while (!block_stack.empty()) {
+        count++;
+        Loc loc = block_stack.top();
+        block_stack.pop();
+        if (count > nested_block_limit_) {
+          ReportNestedBlockError(nested_block_limit_, nested_block_count,
+                                 loc.file, loc.line, results_list_);
+        }
+      }
+    }
+  }
+
+ private:
+  int nested_block_limit_;
+  ResultsList* results_list_;
+};
+
+void PPCheck::MacroExpands(const Token& MacroNameTok, const MacroDefinition& MD,
+                           SourceRange Range, const MacroArgs* Args) {
+  unsigned arg_count = Args ? Args->getNumMacroArguments() : 0;
+  SourceLocation sl = MacroNameTok.getLocation();
+  if (arg_count > limits_->macro_arg_limit &&
+      !source_manager_->isInSystemHeader(sl))
+    ReportMacroArgError(
+        limits_->macro_arg_limit, arg_count, MacroNameTok.getName(),
+        libtooling_utils::GetLocationFilename(sl, source_manager_),
+        libtooling_utils::GetLocationLine(sl, source_manager_), results_list_);
+}
+
+void PPCheck::LexedFileChanged(FileID FID, LexedFileChangeReason Reason,
+                               SrcMgr::CharacteristicKind FileType,
+                               FileID PrevFID, SourceLocation Loc) {
+  if (source_manager_->isInSystemHeader(Loc)) return;
+
+  if (Reason == LexedFileChangeReason::EnterFile) {
+    include_depth_++;
+    current_max_level_ = max<int>(include_depth_, current_max_level_);
+  } else {
+    include_depth_--;
+    if (include_depth_ == 0) {
+      const FileEntry* fe = source_manager_->getFileEntryForID(FID);
+      if (current_max_level_ > limits_->nested_include_limit && fe)
+        ReportNestedIncludeError(
+            limits_->nested_include_limit, current_max_level_,
+            fe->getName().str(),
+            libtooling_utils::GetLocationFilename(Loc, source_manager_),
+            libtooling_utils::GetLocationLine(Loc, source_manager_),
+            results_list_);
+      current_max_level_ = 0;
+    }
+  }
+}
+
+void ASTChecker::Init(LimitList* limits, ResultsList* results_list) {
   results_list_ = results_list;
   struct_member_callback_ = new StructMemberCallback;
-  struct_member_callback_->Init(limits.struct_member_limit, results_list_,
+  struct_member_callback_->Init(limits->struct_member_limit, results_list_,
                                 &finder_);
   function_parm_callback_ = new FunctionParmCallback;
-  function_parm_callback_->Init(limits.function_parm_limit, results_list_,
+  function_parm_callback_->Init(limits->function_parm_limit, results_list_,
                                 &finder_);
   function_arg_callback_ = new FunctionArgCallback;
-  function_arg_callback_->Init(limits.function_arg_limit, results_list_,
+  function_arg_callback_->Init(limits->function_arg_limit, results_list_,
                                &finder_);
   nested_record_callback_ = new NestedRecordCallback;
-  nested_record_callback_->Init(limits.nested_record_limit, results_list_,
+  nested_record_callback_->Init(limits->nested_record_limit, results_list_,
                                 &finder_);
   nested_expr_callback_ = new NestedExprCallback;
-  nested_expr_callback_->Init(limits.nested_expr_limit, results_list_,
+  nested_expr_callback_->Init(limits->nested_expr_limit, results_list_,
                               &finder_);
+  nested_block_callback_ = new NestedBlockCallback;
+  nested_block_callback_->Init(limits->nested_block_limit, results_list_,
+                               &finder_);
   switch_case_callback_ = new SwitchCaseCallback;
-  switch_case_callback_->Init(limits.switch_case_limit, results_list_,
+  switch_case_callback_->Init(limits->switch_case_limit, results_list_,
                               &finder_);
   enum_constant_callback_ = new EnumConstantCallback;
-  enum_constant_callback_->Init(limits.enum_constant_limit, results_list_,
+  enum_constant_callback_->Init(limits->enum_constant_limit, results_list_,
                                 &finder_);
   string_char_callback_ = new StringCharCallback;
-  string_char_callback_->Init(limits.string_char_limit, results_list_,
+  string_char_callback_->Init(limits->string_char_limit, results_list_,
                               &finder_);
   extern_id_callback_ = new ExternIDCallback;
-  extern_id_callback_->Init(limits.extern_id_limit, results_list_, &finder_);
+  extern_id_callback_->Init(limits->extern_id_limit, results_list_, &finder_);
 }
+
+void ASTChecker::Report() { nested_block_callback_->Report(); }
 
 void PreprocessConsumer::HandleTranslationUnit(ASTContext& context) {
   Preprocessor& pp = compiler_.getPreprocessor();
@@ -481,17 +621,25 @@ void PreprocessConsumer::HandleTranslationUnit(ASTContext& context) {
         !info->isBuiltinMacro() && sm.isInMainFile(sl)) {
       string macro_id = macro.first->getName().str();
       macro_ids.insert(macro_id);
-      if (macro_parm_count > limits_.macro_parm_limit)
+      if (macro_parm_count > limits_->macro_parm_limit)
         ReportMacroParmError(
-            limits_.macro_parm_limit, macro_parm_count, macro_id,
+            limits_->macro_parm_limit, macro_parm_count, macro_id,
             libtooling_utils::GetLocationFilename(sl, &sm),
             libtooling_utils::GetLocationLine(sl, &sm), results_list_);
     }
   }
-  if (macro_ids.size() > limits_.macro_id_limit)
-    ReportMacroIDError(limits_.macro_id_limit, macro_ids.size(),
+  if (macro_ids.size() > limits_->macro_id_limit)
+    ReportMacroIDError(limits_->macro_id_limit, macro_ids.size(),
                        libtooling_utils::GetFilename(tud, &sm),
                        libtooling_utils::GetLine(tud, &sm), results_list_);
+}
+
+bool PreprocessAction::BeginSourceFileAction(CompilerInstance& ci) {
+  std::unique_ptr<PPCheck> callback(
+      new PPCheck(&ci.getSourceManager(), limits_, results_list_));
+  Preprocessor& pp = ci.getPreprocessor();
+  pp.addPPCallbacks(std::move(callback));
+  return true;
 }
 
 }  // namespace rule_1_1

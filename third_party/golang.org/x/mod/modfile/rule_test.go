@@ -696,6 +696,137 @@ var addGoTests = []struct {
 	},
 }
 
+var dropGoTests = []struct {
+	desc string
+	in   string
+	out  string
+}{
+	{
+		`module_only`,
+		`module m
+		go 1.14
+		`,
+		`module m
+		`,
+	},
+	{
+		`module_before_require`,
+		`module m
+		go 1.14
+		require x.y/a v1.2.3
+		`,
+		`module m
+		require x.y/a v1.2.3
+		`,
+	},
+	{
+		`require_before_module`,
+		`require x.y/a v1.2.3
+		module example.com/inverted
+		go 1.14
+		`,
+		`require x.y/a v1.2.3
+		module example.com/inverted
+		`,
+	},
+	{
+		`require_only`,
+		`require x.y/a v1.2.3
+		go 1.14
+		`,
+		`require x.y/a v1.2.3
+		`,
+	},
+}
+
+var addToolchainTests = []struct {
+	desc    string
+	in      string
+	version string
+	out     string
+}{
+	{
+		`empty`,
+		``,
+		`go1.17`,
+		`toolchain go1.17
+		`,
+	},
+	{
+		`aftergo`,
+		`// this is a comment
+		require x v1.0.0
+
+		go 1.17
+
+		require y v1.0.0
+		`,
+		`go1.17`,
+		`// this is a comment
+		require x v1.0.0
+
+		go 1.17
+
+		toolchain go1.17
+
+		require y v1.0.0
+		`,
+	},
+	{
+		`already_have_toolchain`,
+		`go 1.17
+
+		toolchain go1.18
+		`,
+		`go1.19`,
+		`go 1.17
+
+		toolchain go1.19
+		`,
+	},
+}
+
+var dropToolchainTests = []struct {
+	desc string
+	in   string
+	out  string
+}{
+	{
+		`empty`,
+		`toolchain go1.17
+		`,
+		``,
+	},
+	{
+		`aftergo`,
+		`// this is a comment
+		require x v1.0.0
+
+		go 1.17
+
+		toolchain go1.17
+
+		require y v1.0.0
+		`,
+		`// this is a comment
+		require x v1.0.0
+
+		go 1.17
+
+		require y v1.0.0
+		`,
+	},
+	{
+		`already_have_toolchain`,
+		`go 1.17
+
+		toolchain go1.18
+		`,
+		`go 1.17
+		`,
+	},
+}
+
 var addExcludeTests = []struct {
 	desc    string
 	in      string
@@ -948,7 +1079,7 @@ var retractRationaleTests = []struct {
 		`prefix_one`,
 		`module m
 		//   prefix
-		retract v1.0.0 
+		retract v1.0.0
 		`,
 		`prefix`,
 	},
@@ -959,7 +1090,7 @@ var retractRationaleTests = []struct {
 		//
 		//     two
 		//
-		// three  
+		// three
 		retract v1.0.0`,
 		`one
 
@@ -1083,7 +1214,7 @@ var moduleDeprecatedTests = []struct {
 	{
 		`deprecated_paragraph_space`,
 		`// Deprecated: the next line has a space
-		// 
+		//
 		// c
 		module m`,
 		"the next line has a space",
@@ -1224,6 +1355,52 @@ var sortBlocksTests = []struct {
 		`,
 		false,
 	},
+	// Exclude blocks are sorted using semver in ascending order
+	// in go.mod files that opt in to Go version 1.21 or newer.
+	{
+		`sort_exclude_go121_semver`,
+		`module m
+		go 1.21
+		exclude (
+			b.example/m v0.9.0
+			a.example/m v1.0.0
+			b.example/m v0.10.0
+			c.example/m v1.1.0
+			b.example/m v0.11.0
+		)`,
+		`module m
+		go 1.21
+		exclude (
+			a.example/m v1.0.0
+			b.example/m v0.9.0
+			b.example/m v0.10.0
+			b.example/m v0.11.0
+			c.example/m v1.1.0
+		)
+		`,
+		true,
+	},
+	{
+		`sort_exclude_!go121_lexicographically`, // Maintain the previous (less featureful) behavior to avoid unnecessary churn.
+		`module m
+		exclude (
+			b.example/m v0.9.0
+			a.example/m v1.0.0
+			b.example/m v0.10.0
+			c.example/m v1.1.0
+			b.example/m v0.11.0
+		)`,
+		`module m
+		exclude (
+			a.example/m v1.0.0
+			b.example/m v0.10.0
+			b.example/m v0.11.0
+			b.example/m v0.9.0
+			c.example/m v1.1.0
+		)
+		`,
+		true,
+	},
 }
 
 var addRetractValidateVersionTests = []struct {
@@ -1329,6 +1506,18 @@ var fixVersionTests = []struct {
 		in:   `replace example.com/m 1.0.0 => example.com/m 1.1.0`,
 		want: `replace example.com/m v1.0.0 => example.com/m v1.1.0`,
 		fix:  fixV,
+	},
+	{
+		desc:    `replace_version_in_path`,
+		in:      `replace example.com/m@v1.0.0 => example.com/m@v1.1.0`,
+		wantErr: `replacement module must match format 'path version', not 'path@version'`,
+		fix:     fixV,
+	},
+	{
+		desc:    `replace_version_in_later_path`,
+		in:      `replace example.com/m => example.com/m@v1.1.0`,
+		wantErr: `replacement module must match format 'path version', not 'path@version'`,
+		fix:     fixV,
 	},
 	{
 		desc: `exclude`,
@@ -1438,6 +1627,38 @@ func TestAddGo(t *testing.T) {
 		t.Run(tt.desc, func(t *testing.T) {
 			testEdit(t, tt.in, tt.out, true, func(f *File) error {
 				return f.AddGoStmt(tt.version)
+			})
+		})
+	}
+}
+
+func TestDropGo(t *testing.T) {
+	for _, tt := range dropGoTests {
+		t.Run(tt.desc, func(t *testing.T) {
+			testEdit(t, tt.in, tt.out, true, func(f *File) error {
+				f.DropGoStmt()
+				return nil
+			})
+		})
+	}
+}
+
+func TestAddToolchain(t *testing.T) {
+	for _, tt := range addToolchainTests {
+		t.Run(tt.desc, func(t *testing.T) {
+			testEdit(t, tt.in, tt.out, true, func(f *File) error {
+				return f.AddToolchainStmt(tt.version)
+			})
+		})
+	}
+}
+
+func TestDropToolchain(t *testing.T) {
+	for _, tt := range dropToolchainTests {
+		t.Run(tt.desc, func(t *testing.T) {
+			testEdit(t, tt.in, tt.out, true, func(f *File) error {
+				f.DropToolchainStmt()
+				return nil
 			})
 		})
 	}

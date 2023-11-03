@@ -22,8 +22,9 @@ using analyzer::proto::ResultsList;
 
 namespace {
 
-void ReportError(QualType destination, QualType source, string loc,
-                 std::string path, int line_number, ResultsList* results_list) {
+void ReportError(std::string name, QualType destination, QualType source,
+                 string loc, std::string path, int line_number,
+                 ResultsList* results_list) {
   std::string error_message = absl::StrFormat(
       "[C1404][misra-c2012-11.6]: Conversions violation of misra-c2012-11.6\n"
       "source object type: %s\n"
@@ -37,6 +38,7 @@ void ReportError(QualType destination, QualType source, string loc,
   pb_result->set_source_type(source.getAsString());
   pb_result->set_destination_type(destination.getAsString());
   pb_result->set_loc(loc);
+  pb_result->set_name(name);
   LOG(INFO) << error_message;
 }
 
@@ -90,7 +92,9 @@ class CastCallback : public MatchFinder::MatchCallback {
     int line_number = libtooling_utils::GetLine(ce, result.SourceManager);
     QualType destination_type = ce->getType();
     QualType source_type = ce->getSubExpr()->getType();
-    ReportError(destination_type, source_type,
+    std::string source_name = libtooling_utils::GetExprName(
+        ce->getSubExpr(), result.SourceManager, context);
+    ReportError(source_name, destination_type, source_type,
                 libtooling_utils::GetLocation(ce, result.SourceManager), path,
                 line_number, results_list_);
   }

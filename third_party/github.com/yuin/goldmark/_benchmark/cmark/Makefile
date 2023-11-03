@@ -19,17 +19,17 @@ run: $(CMARK_BIN)
 		GOOS=windows GOARCH=amd64 go build -o goldmark_benchmark.exe ./goldmark_benchmark.go && ./goldmark_benchmark.exe; \
 	fi
 
-./cmark-master/build/src/config.h:
+./cmark-master/Makefile:
 	wget -nc -O cmark.zip https://github.com/commonmark/cmark/archive/master.zip
 	unzip cmark.zip
 	rm -f cmark.zip
 	@ if [ -z "$${WSL_INTEROP}" ]; then \
-		cd cmark-master && make;
+		cd cmark-master && make; \
 	else \
 		cd cmark-master && make mingw; \
 	fi
 
-$(CMARK_BIN): ./cmark-master/build/src/config.h
+$(CMARK_BIN): ./cmark-master/Makefile
 	@ if [ -z "$${WSL_INTEROP}" ]; then \
 		gcc -I./cmark-master/build/src -I./cmark-master/src  cmark_benchmark.c -o $(CMARK_BIN) -L./cmark-master/build/src -lcmark; \
 	else \

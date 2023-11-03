@@ -6,7 +6,7 @@ package modfile
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -212,6 +212,53 @@ var workAddGoTests = []struct {
 	},
 }
 
+var workAddToolchainTests = []struct {
+	desc    string
+	in      string
+	version string
+	out     string
+}{
+	{
+		`empty`,
+		``,
+		`go1.17`,
+		`toolchain go1.17
+		`,
+	},
+	{
+		`aftergo`,
+		`// this is a comment
+		use foo
+
+		go 1.17
+
+		use bar
+		`,
+		`go1.17`,
+		`// this is a comment
+		use foo
+
+		go 1.17
+
+		toolchain go1.17
+
+		use bar
+		`,
+	},
+	{
+		`already_have_toolchain`,
+		`go 1.17
+
+		toolchain go1.18
+		`,
+		`go1.19`,
+		`go 1.17
+
+		toolchain go1.19
+		`,
+	},
+}
+
 var workSortBlocksTests = []struct {
 	desc, in, out string
 }{
@@ -284,6 +331,16 @@ func TestWorkAddGo(t *testing.T) {
 	}
 }
 
+func TestWorkAddToolchain(t *testing.T) {
+	for _, tt := range workAddToolchainTests {
+		t.Run(tt.desc, func(t *testing.T) {
+			testWorkEdit(t, tt.in, tt.out, func(f *WorkFile) error {
+				return f.AddToolchainStmt(tt.version)
+			})
+		})
+	}
+}
+
 func TestWorkSortBlocks(t *testing.T) {
 	for _, tt := range workSortBlocksTests {
 		t.Run(tt.desc, func(t *testing.T) {
@@ -308,7 +365,7 @@ func TestWorkPrintParse(t *testing.T) {
 		name := filepath.Base(out)
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			data, err := ioutil.ReadFile(out)
+			data, err := os.ReadFile(out)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -332,10 +389,7 @@ func TestWorkPrintParse(t *testing.T) {
 
 			pf1, err := ParseWork(base, data, nil)
 			if err != nil {
-				switch base {
-				case "testdata/replace2.in", "testdata/gopkg.in.golden":
-					t.Errorf("should parse %v: %v", base, err)
-				}
+				t.Errorf("should parse %v: %v", base, err)
 			}
 			if err == nil {
 				pf2, err := ParseWork(base, ndata, nil)
@@ -360,7 +414,7 @@ func TestWorkPrintParse(t *testing.T) {
 			}
 
 			if strings.HasSuffix(out, ".in") {
-				golden, err := ioutil.ReadFile(strings.TrimSuffix(out, ".in") + ".golden")
+				golden, err := os.ReadFile(strings.TrimSuffix(out, ".in") + ".golden")
 				if err != nil {
 					t.Fatal(err)
 				}

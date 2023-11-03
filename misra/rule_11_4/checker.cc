@@ -22,8 +22,8 @@ using analyzer::proto::ResultsList;
 
 namespace {
 
-void ReportError(bool ifIntToPointer, QualType destination, QualType source,
-                 string loc, std::string path, int line_number,
+void ReportError(std::string name, bool ifIntToPointer, QualType destination,
+                 QualType source, string loc, std::string path, int line_number,
                  ResultsList* results_list) {
   std::string error_message;
   analyzer::proto::Result* pb_result;
@@ -54,6 +54,7 @@ void ReportError(bool ifIntToPointer, QualType destination, QualType source,
   pb_result->set_source_type(source.getAsString());
   pb_result->set_destination_type(destination.getAsString());
   pb_result->set_loc(loc);
+  pb_result->set_name(name);
   LOG(INFO) << error_message;
 }
 
@@ -110,7 +111,9 @@ class CastCallback : public MatchFinder::MatchCallback {
       // The can not only matches ((void*)0), but also other NULL types.
       return;
     }
-    ReportError(ifIntToPointer, destination_type, source_type,
+    std::string source_name = libtooling_utils::GetExprName(
+        ce->getSubExpr(), result.SourceManager, context);
+    ReportError(source_name, ifIntToPointer, destination_type, source_type,
                 libtooling_utils::GetLocation(ce, result.SourceManager), path,
                 line_number, results_list_);
   }

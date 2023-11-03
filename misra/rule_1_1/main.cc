@@ -33,6 +33,9 @@ extern cl::opt<int> string_char_limit;
 extern cl::opt<int> extern_id_limit;
 extern cl::opt<int> macro_id_limit;
 extern cl::opt<int> macro_parm_limit;
+extern cl::opt<int> macro_arg_limit;
+extern cl::opt<int> nested_block_limit;
+extern cl::opt<int> nested_include_limit;
 
 namespace misra {
 namespace rule_1_1 {
@@ -62,14 +65,16 @@ int rule_1_1(int argc, char** argv) {
   LimitList limits{struct_member_limit, function_parm_limit, function_arg_limit,
                    nested_record_limit, nested_expr_limit,   switch_case_limit,
                    enum_constant_limit, string_char_limit,   extern_id_limit,
-                   macro_id_limit,      macro_parm_limit};
-  ast_checker.Init(limits, &all_results);
+                   macro_id_limit,      macro_parm_limit,    macro_arg_limit,
+                   nested_block_limit,  nested_include_limit};
+  ast_checker.Init(&limits, &all_results);
   int status =
       tool.run(newFrontendActionFactory(ast_checker.GetMatchFinder()).get());
+  ast_checker.Report();
   LOG(INFO) << "libtooling status (ASTChecker): " << status << endl;
 
   // running PreprocessChecker
-  misra::rule_1_1::PreprocessChecker preprocess_checker{&all_results, limits};
+  misra::rule_1_1::PreprocessChecker preprocess_checker{&all_results, &limits};
   status = tool.run(&preprocess_checker);
   LOG(INFO) << "libtooling status (PreprocessChecker): " << status << endl;
 

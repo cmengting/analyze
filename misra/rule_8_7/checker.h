@@ -17,6 +17,14 @@ namespace rule_8_7 {
 
 class ExternalVDCallback;
 
+struct location {
+  std::string path;
+  int line_number;
+  std::string loc;
+  std::string first_decl_path;
+  std::string first_decl_loc;
+};
+
 /*
  */
 class Checker {
@@ -30,8 +38,7 @@ class Checker {
   ExternalVDCallback* vd_callback_;
   clang::ast_matchers::MatchFinder finder_;
   analyzer::proto::ResultsList* results_list_;
-  std::unordered_map<std::string, std::vector<std::pair<std::string, int>>>
-      vd_name_locations_;
+  std::unordered_map<std::string, std::vector<location>> vd_name_locations_;
 };
 
 }  // namespace rule_8_7

@@ -703,3 +703,28 @@ This line will be displayed.
 //- - - - - - - - -//
 <p>\\\ufffd&quot;</p>
 //= = = = = = = = = = = = = = = = = = = = = = = =//
+
+
+55: inline HTML comment
+//- - - - - - - - -//
+a <!-- b --> c
+
+a <!-- b -->
+//- - - - - - - - -//
+<p>a <!-- b --> c</p>
+<p>a <!-- b --></p>
+//= = = = = = = = = = = = = = = = = = = = = = = =//
+
+
+56: An empty list followed by blockquote
+//- - - - - - - - -//
+1.
+> This is a quote.
+//- - - - - - - - -//
+<ol>
+<li></li>
+</ol>
+<blockquote>
+<p>This is a quote.</p>
+</blockquote>
+//= = = = = = = = = = = = = = = = = = = = = = = =//

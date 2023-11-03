@@ -20,6 +20,12 @@ namespace rule_5_1 {
 class ExternalVDCallback;
 class ExternalFDCallback;
 
+struct identifier {
+  std::string name;
+  std::string loc;
+  bool is_implicit;
+};
+
 /**
  * From [misra-c2012-5.1]:
  *
@@ -42,16 +48,17 @@ class ExternalFDCallback;
  * options of the length and whether to be case-sensitive for the definition of
  * distinct.
  */
+
 class Checker {
  public:
-  void Init(int prefix_length, bool case_sensitive,
+  void Init(int prefix_length, bool case_sensitive, bool implicit_decl,
             analyzer::proto::ResultsList* results_list);
 
   clang::ast_matchers::MatchFinder* GetMatchFinder() { return &finder_; }
 
  private:
   // Variables and functions share the same map.
-  std::unordered_map<std::string, std::string> name_locations_;
+  std::unordered_map<std::string, identifier> name_locations_;
   ExternalVDCallback* external_vd_callback_;
   ExternalFDCallback* external_fd_callback_;
   clang::ast_matchers::MatchFinder finder_;

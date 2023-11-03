@@ -32,5 +32,5 @@ func Analyze(srcdir string, opts *options.CheckOptions) (*pb.ResultsList, error)
 		result.ErrorKind = pb.Result_MISRA_C_2012_RULE_1_1_EXTERN_ID_CHAR
 	}
 	results.Results = append(results.Results, rule_5_1_results.Results...)
-	return results, nil
+	return runner.RemoveDup(results), nil
 }

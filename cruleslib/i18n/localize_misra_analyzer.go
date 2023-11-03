@@ -52,7 +52,7 @@ func localizeErrorMessage(result *pb.Result, p *message.Printer) string {
 	case pb.Result_MISRA_C_2012_RULE_5_1_NON_ASCII_ERROR:
 		return p.Sprintf("[C1109][misra-c2012-5.1]: violation of misra-contain non-ASCII characters\n%s: %s", result.Kind, result.Name)
 	case pb.Result_MISRA_C_2012_RULE_5_1_DISTINCT_ERROR:
-		return p.Sprintf("[C1109][misra-c2012-5.1]: violation of misra-c2012-5.1\n%s: %s\nFirst identifier location: %s\nDuplicated identifier location: %s", result.Kind, result.Name, result.Loc, result.OtherLoc)
+		return p.Sprintf("[C1109][misra-c2012-5.1]: violation of misra-c2012-5.1\n%s: %s\nFirst identifier location: %s\nDuplicated identifier '%s' location: %s", result.Kind, result.Name, result.Loc, result.ExternalMessage, result.OtherLoc)
 	case pb.Result_MISRA_C_2012_RULE_5_2:
 		return p.Sprintf("[C1108][misra-c2012-5.2]: violation of misra-c2012-5.2")
 	case pb.Result_MISRA_C_2012_RULE_5_3:
@@ -118,7 +118,7 @@ func localizeErrorMessage(result *pb.Result, p *message.Printer) string {
 	case pb.Result_MISRA_C_2012_RULE_8_6:
 		return p.Sprintf("[C0509][misra-c2012-8.6]: error duplicated definition\nduplicated variable name: %s\nfirst definition location: %s\nduplicated definition location: %s", result.Name, result.Loc, result.OtherLoc)
 	case pb.Result_MISRA_C_2012_RULE_8_7:
-		return p.Sprintf("[C0508][misra-c2012-8.7]: violation of misra-c2012-8.7\nExtern function or variable is only called at one translation unit\nfunction name: %s\nlocation: %s", result.Name, result.Loc)
+		return p.Sprintf("[C0508][misra-c2012-8.7]: violation of misra-c2012-8.7\nExtern function or variable is only called at one translation unit\nfunction name: %s\nused location: %s\ndeclared location: %s", result.Name, result.Loc, result.OtherLoc)
 	case pb.Result_MISRA_C_2012_RULE_8_8:
 		return p.Sprintf("[C0507][misra-c2012-8.8]: violation of misra-c2012-8.8")
 	case pb.Result_MISRA_C_2012_RULE_8_9:
@@ -158,33 +158,33 @@ func localizeErrorMessage(result *pb.Result, p *message.Printer) string {
 	case pb.Result_MISRA_C_2012_RULE_10_8:
 		return p.Sprintf("[C0801][misra-c2012-10.8]: violation of misra-c2012-10.8")
 	case pb.Result_MISRA_C_2012_RULE_11_1:
-		return p.Sprintf("[C1409][misra-c2012-11.1]: violation of misra-conversions violation of misra-c2012-11.1\nsource type: %s\ndestination type: %s\nLocation: %s", result.SourceType, result.DestinationType, result.Loc)
+		return p.Sprintf("[C1409][misra-c2012-11.1]: violation of misra-conversions violation of misra-c2012-11.1\nobject name: %s\nsource type: %s\ndestination type: %s\nLocation: %s", result.Name, result.SourceType, result.DestinationType, result.Loc)
 	case pb.Result_MISRA_C_2012_RULE_11_1_EXTERNAL:
 		return p.Sprintf("[C1409][misra-c2012-11.1]: violation of misra-conversions violation of misra-c2012-11.1\n%s", result.ExternalMessage)
 	case pb.Result_MISRA_C_2012_RULE_11_2:
-		return p.Sprintf("[C1408][misra-c2012-11.2]: violation of misra-conversions violation of misra-c2012-11.2\nsource pointer object type: %s\ndestination pointer object type: %s\nLocation: %s", result.SourceType, result.DestinationType, result.Loc)
+		return p.Sprintf("[C1408][misra-c2012-11.2]: violation of misra-conversions violation of misra-c2012-11.2\nobject name: %s\nsource pointer object type: %s\ndestination pointer object type: %s\nLocation: %s", result.Name, result.SourceType, result.DestinationType, result.Loc)
 	case pb.Result_MISRA_C_2012_RULE_11_3:
-		return p.Sprintf("[C1407][misra-c2012-11.3]: violation of misra-conversions violation of misra-c2012-11.3\nsource pointer object type: %s\ndestination pointer object type: %s\nLocation: %s", result.SourceType, result.DestinationType, result.Loc)
+		return p.Sprintf("[C1407][misra-c2012-11.3]: violation of misra-conversions violation of misra-c2012-11.3\nobject name: %s\nsource pointer object type: %s\ndestination pointer object type: %s\nLocation: %s", result.Name, result.SourceType, result.DestinationType, result.Loc)
 	case pb.Result_MISRA_C_2012_RULE_11_4_CPPCHECK:
 		return p.Sprintf("[C1406][misra-c2012-11.4]: violation of misra-c2012-11.4")
 	case pb.Result_MISRA_C_2012_RULE_11_4_INT_TO_POINTER:
-		return p.Sprintf("[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nsource type: %s\ndestination pointer object type: %s\nLocation: %s", result.SourceType, result.DestinationType, result.Loc)
+		return p.Sprintf("[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nobject name: %s\nsource type: %s\ndestination pointer object type: %s\nLocation: %s", result.Name, result.SourceType, result.DestinationType, result.Loc)
 	case pb.Result_MISRA_C_2012_RULE_11_4:
-		return p.Sprintf("[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nsource pointer object type: %s\ndestination type: %s\nLocation: %s", result.SourceType, result.DestinationType, result.Loc)
+		return p.Sprintf("[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nobject name: %s\nsource pointer object type: %s\ndestination type: %s\nLocation: %s", result.Name, result.SourceType, result.DestinationType, result.Loc)
 	case pb.Result_MISRA_C_2012_RULE_11_5_CPPCHECK:
 		return p.Sprintf("[C1405][misra-c2012-11.5]: violation of misra-c2012-11.5")
 	case pb.Result_MISRA_C_2012_RULE_11_5:
-		return p.Sprintf("[C1405][misra-c2012-11.5]: violation of misra-conversions violation of misra-c2012-11.5\nsource pointer object type: %s\ndestination pointer object type: %s\nLocation: %s", result.SourceType, result.DestinationType, result.Loc)
+		return p.Sprintf("[C1405][misra-c2012-11.5]: violation of misra-conversions violation of misra-c2012-11.5\nobject name: %s\nsource pointer object type: %s\ndestination pointer object type: %s\nLocation: %s", result.Name, result.SourceType, result.DestinationType, result.Loc)
 	case pb.Result_MISRA_C_2012_RULE_11_6:
-		return p.Sprintf("[C1404][misra-c2012-11.6]: violation of misra-conversions violation of misra-c2012-11.6\nsource object type: %s\ndestination object type: %s\nLocation: %s", result.SourceType, result.DestinationType, result.Loc)
+		return p.Sprintf("[C1404][misra-c2012-11.6]: violation of misra-conversions violation of misra-c2012-11.6\nobject name: %s\nsource object type: %s\ndestination object type: %s\nLocation: %s", result.Name, result.SourceType, result.DestinationType, result.Loc)
 	case pb.Result_MISRA_C_2012_RULE_11_6_EXTERNAL:
 		return p.Sprintf("[C1404][misra-c2012-11.6]: violation of misra-conversions violation of misra-c2012-11.6\n%s", result.ExternalMessage)
 	case pb.Result_MISRA_C_2012_RULE_11_7:
-		return p.Sprintf("[C1403][misra-c2012-11.7]: violation of misra-conversions violation of misra-c2012-11.7\nsource type: %s\ndestination type: %s\nLocation: %s", result.SourceType, result.DestinationType, result.Loc)
+		return p.Sprintf("[C1403][misra-c2012-11.7]: violation of misra-conversions violation of misra-c2012-11.7\nobject name: %s\nsource type: %s\ndestination type: %s\nLocation: %s", result.Name, result.SourceType, result.DestinationType, result.Loc)
 	case pb.Result_MISRA_C_2012_RULE_11_7_EXTERNAL:
 		return p.Sprintf("[C1403][misra-c2012-11.7]: violation of misra-conversions violation of misra-c2012-11.7\n%s", result.ExternalMessage)
 	case pb.Result_MISRA_C_2012_RULE_11_8:
-		return p.Sprintf("[C1402][misra-c2012-11.8]: violation of misra-conversions violation of misra-c2012-11.8\nsource pointer object type: %s\ndestination pointer object type: %s", result.SourceType, result.DestinationType)
+		return p.Sprintf("[C1402][misra-c2012-11.8]: violation of misra-conversions violation of misra-c2012-11.8\nobject name: %s\nsource pointer object type: %s\ndestination pointer object type: %s", result.Name, result.SourceType, result.DestinationType)
 	case pb.Result_MISRA_C_2012_RULE_11_9:
 		return p.Sprintf("[C1401][misra-c2012-11.9]: violation of misra-c2012-11.9")
 	case pb.Result_MISRA_C_2012_RULE_12_1:

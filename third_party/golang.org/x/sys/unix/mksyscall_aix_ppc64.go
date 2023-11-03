@@ -66,7 +66,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -190,7 +189,7 @@ func main() {
 			}
 
 			onlyCommon := false
-			if funct == "readlen" || funct == "writelen" || funct == "FcntlInt" || funct == "FcntlFlock" {
+			if funct == "FcntlInt" || funct == "FcntlFlock" || funct == "ioctlPtr" {
 				// This function call another syscall which is already implemented.
 				// Therefore, the gc and gccgo part must not be generated.
 				onlyCommon = true
@@ -525,7 +524,7 @@ func main() {
 	}
 
 	// Print zsyscall_aix_ppc64.go
-	err := ioutil.WriteFile("zsyscall_aix_ppc64.go",
+	err := os.WriteFile("zsyscall_aix_ppc64.go",
 		[]byte(fmt.Sprintf(srcTemplate1, cmdLine(), goBuildTags(), plusBuildTags(), pack, imp, textcommon)),
 		0644)
 	if err != nil {
@@ -536,7 +535,7 @@ func main() {
 	// Print zsyscall_aix_ppc64_gc.go
 	vardecls := "\t" + strings.Join(vars, ",\n\t")
 	vardecls += " syscallFunc"
-	err = ioutil.WriteFile("zsyscall_aix_ppc64_gc.go",
+	err = os.WriteFile("zsyscall_aix_ppc64_gc.go",
 		[]byte(fmt.Sprintf(srcTemplate2, cmdLine(), goBuildTags(), plusBuildTags(), pack, imp, dynimports, linknames, vardecls, textgc)),
 		0644)
 	if err != nil {
@@ -545,7 +544,7 @@ func main() {
 	}
 
 	// Print zsyscall_aix_ppc64_gccgo.go
-	err = ioutil.WriteFile("zsyscall_aix_ppc64_gccgo.go",
+	err = os.WriteFile("zsyscall_aix_ppc64_gccgo.go",
 		[]byte(fmt.Sprintf(srcTemplate3, cmdLine(), goBuildTags(), plusBuildTags(), pack, cExtern, imp, textgccgo)),
 		0644)
 	if err != nil {

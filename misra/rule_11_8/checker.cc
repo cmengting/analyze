@@ -22,8 +22,8 @@ using analyzer::proto::ResultsList;
 
 namespace {
 
-void ReportError(QualType destination, QualType source, std::string path,
-                 int line_number, ResultsList* results_list) {
+void ReportError(std::string name, QualType destination, QualType source,
+                 std::string path, int line_number, ResultsList* results_list) {
   std::string error_message = absl::StrFormat(
       "[C1402][misra-c2012-11.8]: Conversions violation of misra-c2012-11.8\n"
       "source pointer object type: %s\n"
@@ -35,6 +35,7 @@ void ReportError(QualType destination, QualType source, std::string path,
       analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_11_8);
   pb_result->set_source_type(source.getAsString());
   pb_result->set_destination_type(destination.getAsString());
+  pb_result->set_name(name);
   LOG(INFO) << error_message;
 }
 
@@ -70,16 +71,18 @@ class CastCallback : public MatchFinder::MatchCallback {
     std::string path = libtooling_utils::GetFilename(ce, result.SourceManager);
     int line_number = libtooling_utils::GetLine(ce, result.SourceManager);
 
+    std::string source_name = libtooling_utils::GetExprName(
+        ce->getSubExpr(), result.SourceManager, context);
     QualType destination_type = ce->getType()->getPointeeType();
     QualType source_type = ce->getSubExpr()->getType()->getPointeeType();
     if (source_type.isVolatileQualified() &&
         !destination_type.isVolatileQualified()) {
-      ReportError(destination_type, source_type, path, line_number,
+      ReportError(source_name, destination_type, source_type, path, line_number,
                   results_list_);
     }
     if (source_type.isConstQualified() &&
         !destination_type.isConstQualified()) {
-      ReportError(destination_type, source_type, path, line_number,
+      ReportError(source_name, destination_type, source_type, path, line_number,
                   results_list_);
     }
   }

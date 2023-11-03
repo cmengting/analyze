@@ -769,18 +769,43 @@ bool isPersistentSideEffect(const VarDecl* vd, const DeclRefExpr* dre) {
 }
 
 void ConstCallExprVisitor::Visit(const Stmt* Node) {
+  bool dummy = false;
+  Visit_(Node, &dummy);
+}
+
+void ConstCallExprVisitor::Visit_(const Stmt* Node, bool* HasCallExprChild) {
+  if (hasPersistentSideEffects) {
+    return;
+  }
   // Call appropriate visit method based on the node type
   ConstStmtVisitor<ConstCallExprVisitor>::Visit(Node);
   // Traverse child statements
+  bool hasCallExprChild = false;
+  if (dyn_cast<CallExpr>(Node)) {
+    hasCallExprChild = true;
+  }
+  const Expr* expr = dyn_cast<Expr>(Node);
+  if (!expr || !expr->HasSideEffects(*ctx_)) {
+    return;
+  }
   for (const auto* Child : Node->children()) {
     if (Child) {
-      Visit(Child);
+      bool isCallExpr = false;
+      Visit_(Child, &isCallExpr);
+      hasCallExprChild = hasCallExprChild || isCallExpr;
     }
   }
+  if (!hasCallExprChild) {
+    hasPersistentSideEffects = true;
+  }
+  *HasCallExprChild = hasCallExprChild;
 }
 
 void ConstCallExprVisitor::VisitCallExpr(const CallExpr* Call) {
   hasCallExpr = true;
+  if (!Call->getDirectCallee()) {
+    return;
+  }
   const FunctionDecl* Callee = Call->getDirectCallee()->getDefinition();
   if (!Callee) return;
 
@@ -819,6 +844,29 @@ void ConstCallExprVisitor::VisitCallExpr(const CallExpr* Call) {
       }
     }
   }
+}
+
+string GetExprName(const Expr* expr, SourceManager* sm, ASTContext* context) {
+  CharSourceRange char_range = Lexer::makeFileCharRange(
+      CharSourceRange::getTokenRange(expr->getSourceRange()), *sm,
+      context->getLangOpts());
+  string name =
+      Lexer::getSourceText(char_range, *sm, context->getLangOpts()).str();
+  return name;
+}
+
+// If aggressive_mode is false, only report when the function is sure to have
+// persistent side effects.
+// If aggressive_mode is true, only not report when the function is sure not to
+// have persistent side effects.
+bool ConstCallExprVisitor::ShouldReport(bool aggressive_mode) {
+  if (hasPersistentSideEffects) {
+    return true;
+  }
+  if (!aggressive_mode) {
+    return hasCallExpr && hasDirectCall && hasPersistentSideEffects;
+  }
+  return !(hasCallExpr && hasDirectCall && !hasPersistentSideEffects);
 }
 
 }  // namespace libtooling_utils

@@ -129,6 +129,11 @@ func parseTests() []parseTest {
 		{in: "en-t-nl-abcd", lang: "en", ext: "t-nl", invalid: true},
 		{in: "en-t-nl-latn", lang: "en", ext: "t-nl-latn"},
 		{in: "en-t-t0-abcd-x-a", lang: "en", extList: []string{"t-t0-abcd", "x-a"}},
+		{in: "en_t_pt_MLt", lang: "en", ext: "t-pt-mlt", changed: true},
+		{in: "en-t-fr-est", lang: "en", ext: "t-fr-est", changed: false},
+		{in: "fr-est", lang: "et", changed: true},
+		{in: "fr-est-t-fr-est", lang: "et", ext: "t-fr-est", changed: true},
+		{in: "fr-est-Cyrl", lang: "et", script: "Cyrl", changed: true},
 		// invalid
 		{in: "", lang: "und", invalid: true},
 		{in: "-", lang: "und", invalid: true},
@@ -387,5 +392,18 @@ func TestParseAcceptLanguage(t *testing.T) {
 				break
 			}
 		}
+	}
+}
+
+func TestParseAcceptLanguageTooBig(t *testing.T) {
+	s := strings.Repeat("en-x-a-", 333)
+	_, _, err := ParseAcceptLanguage(s)
+	if err != language.ErrSyntax {
+		t.Errorf("ParseAcceptLanguage() unexpected error: got %v, want %v", err, language.ErrSyntax)
+	}
+	s += "en-x-a"
+	_, _, err = ParseAcceptLanguage(s)
+	if err != errTagListTooLarge {
+		t.Errorf("ParseAcceptLanguage() unexpected error: got %v, want %v", err, errTagListTooLarge)
 	}
 }

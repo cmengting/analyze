@@ -101,13 +101,13 @@ class OperatorSideEffectCallback : public MatchFinder::MatchCallback {
         }
       }
     }
-
-    if (call_expr->HasSideEffects(*result.Context)) {
-      libtooling_utils::ConstCallExprVisitor Visitor;
-      Visitor.Visit(call_expr);
-      if (Visitor.hasCallExpr && Visitor.hasDirectCall &&
-          !Visitor.hasPersistentSideEffects)
-        return;
+    if (!call_expr->HasSideEffects(*result.Context)) {
+      return;
+    }
+    libtooling_utils::ConstCallExprVisitor Visitor(result.Context);
+    Visitor.Visit(call_expr);
+    if (!Visitor.ShouldReport(aggressive_mode_)) {
+      return;
     }
 
     int line =

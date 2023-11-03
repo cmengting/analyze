@@ -14,8 +14,8 @@ import (
 func TestTagSize(t *testing.T) {
 	id := Tag{}
 	typ := reflect.TypeOf(id)
-	if typ.Size() > 24 {
-		t.Errorf("size of Tag was %d; want 24", typ.Size())
+	if typ.Size() > 32 {
+		t.Errorf("size of Tag was %d; want <= 32", typ.Size())
 	}
 }
 
@@ -681,6 +681,8 @@ var (
 		"en-t-t0-abcd",
 		"en-t-nl-latn",
 		"en-t-t0-abcd-x-a",
+		"en_t_pt_MLt",
+		"en-t-fr-est",
 	}
 	// Change, but not memory allocation required.
 	benchSimpleChange = []string{

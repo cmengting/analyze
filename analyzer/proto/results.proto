@@ -49,6 +49,9 @@ message Result {
     MISRA_C_2012_RULE_1_1_EXTERN_ID_CHAR = 1010110;
     MISRA_C_2012_RULE_1_1_MACRO_ID = 1010111;
     MISRA_C_2012_RULE_1_1_MACRO_PARM = 1010112;
+    MISRA_C_2012_RULE_1_1_MACRO_ARG = 1010113;
+    MISRA_C_2012_RULE_1_1_NESTED_BLOCK = 1010114;
+    MISRA_C_2012_RULE_1_1_NESTED_INCLUDE = 1010115;
     MISRA_C_2012_RULE_1_3 = 1010301;
     MISRA_C_2012_RULE_1_4 = 1010400;
     MISRA_C_2012_RULE_2_1 = 1020101;
@@ -523,6 +526,12 @@ message Result {
   string macro_id_count = 48;
   string macro_parm_limit = 49;
   string macro_parm_count = 50;
+  string macro_arg_limit = 51;
+  string macro_arg_count = 52;
+  string nested_block_limit = 53;
+  string nested_block_count = 54;
+  string nested_include_limit = 55;
+  string nested_include_count = 56;
 
   int32 severity = 21;
   string code_line_hash = 22;

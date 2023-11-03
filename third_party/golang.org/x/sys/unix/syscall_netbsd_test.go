@@ -5,7 +5,6 @@
 package unix_test
 
 import (
-	"bytes"
 	"os"
 	"testing"
 
@@ -39,11 +38,11 @@ func TestIoctlPtmget(t *testing.T) {
 		t.Fatalf("IoctlGetPtmget: %v\n", err)
 	}
 
-	t.Logf("sfd = %v, ptsname = %v", ptm.Sfd, string(ptm.Sn[:bytes.IndexByte(ptm.Sn[:], 0)]))
+	t.Logf("sfd = %v, ptsname = %v", ptm.Sfd, unix.ByteSliceToString(ptm.Sn[:]))
 }
 
 func TestStatvfs(t *testing.T) {
-	defer chtmpdir(t)()
+	chtmpdir(t)
 	touch(t, "file1")
 
 	var statvfs1, statvfs2 unix.Statvfs_t

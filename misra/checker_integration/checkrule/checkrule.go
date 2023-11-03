@@ -58,17 +58,20 @@ type JSONOption struct {
 	OptionalInfoFile                   string   `json:"optional-info-file" yaml:"-"`
 	ReportErrorInCallingSystemFunction *bool    `json:"report-error-in-calling-system-function,omitempty" yaml:"-"` // For CWE-686 only.
 	Severity                           *string  `json:"severity" yaml:"-"`
-	StructMemberLimit                  *int     `json:"struct-member-limit,omitempty" yaml:"-"` //misra_c_2012/rule_1_1
-	FunctionParmLimit                  *int     `json:"function-parm-limit,omitempty" yaml:"-"` //misra_c_2012/rule_1_1
-	FunctionArgLimit                   *int     `json:"function-arg-limit,omitempty" yaml:"-"`  //misra_c_2012/rule_1_1
-	NestedRecordLimit                  *int     `json:"nested-record-limit,omitempty" yaml:"-"` //misra_c_2012/rule_1_1
-	NestedExprLimit                    *int     `json:"nested-expr-limit,omitempty" yaml:"-"`   //misra_c_2012/rule_1_1
-	SwitchCaseLimit                    *int     `json:"switch-case-limit,omitempty" yaml:"-"`   //misra_c_2012/rule_1_1
-	EnumConstantLimit                  *int     `json:"enum-constant-limit,omitempty" yaml:"-"` //misra_c_2012/rule_1_1
-	StringCharLimit                    *int     `json:"string-char-limit,omitempty" yaml:"-"`   //misra_c_2012/rule_1_1
-	ExternIDLimit                      *int     `json:"extern-id-limit,omitempty" yaml:"-"`     //misra_c_2012/rule_1_1
-	MacroIDLimit                       *int     `json:"macro-id-limit,omitempty" yaml:"-"`      //misra_c_2012/rule_1_1
-	MacroParmLimit                     *int     `json:"macro-parm-limit,omitempty" yaml:"-"`    //misra_c_2012/rule_1_1
+	StructMemberLimit                  *int     `json:"struct-member-limit,omitempty" yaml:"-"`  //misra_c_2012/rule_1_1
+	FunctionParmLimit                  *int     `json:"function-parm-limit,omitempty" yaml:"-"`  //misra_c_2012/rule_1_1
+	FunctionArgLimit                   *int     `json:"function-arg-limit,omitempty" yaml:"-"`   //misra_c_2012/rule_1_1
+	NestedRecordLimit                  *int     `json:"nested-record-limit,omitempty" yaml:"-"`  //misra_c_2012/rule_1_1
+	NestedExprLimit                    *int     `json:"nested-expr-limit,omitempty" yaml:"-"`    //misra_c_2012/rule_1_1
+	SwitchCaseLimit                    *int     `json:"switch-case-limit,omitempty" yaml:"-"`    //misra_c_2012/rule_1_1
+	EnumConstantLimit                  *int     `json:"enum-constant-limit,omitempty" yaml:"-"`  //misra_c_2012/rule_1_1
+	StringCharLimit                    *int     `json:"string-char-limit,omitempty" yaml:"-"`    //misra_c_2012/rule_1_1
+	ExternIDLimit                      *int     `json:"extern-id-limit,omitempty" yaml:"-"`      //misra_c_2012/rule_1_1
+	MacroIDLimit                       *int     `json:"macro-id-limit,omitempty" yaml:"-"`       //misra_c_2012/rule_1_1
+	MacroParmLimit                     *int     `json:"macro-parm-limit,omitempty" yaml:"-"`     //misra_c_2012/rule_1_1
+	MacroArgLimit                      *int     `json:"macro-arg-limit,omitempty" yaml:"-"`      //misra_c_2012/rule_1_1
+	NestedBlockLimit                   *int     `json:"nested-block-limit,omitempty" yaml:"-"`   //misra_c_2012/rule_1_1
+	NestedIncludeLimit                 *int     `json:"nested-include-limit,omitempty" yaml:"-"` //misra_c_2012/rule_1_1
 }
 
 type FilterAndSinkFunc struct {

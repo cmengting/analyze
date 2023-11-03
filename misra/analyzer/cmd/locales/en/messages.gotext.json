@@ -359,9 +359,9 @@
             "fuzzy": true
         },
         {
-            "id": "[C1109][misra-c2012-5.1]: violation of misra-c2012-5.1\n{Kind}: {Name}\nFirst identifier location: {Loc}\nDuplicated identifier location: {OtherLoc}",
-            "message": "[C1109][misra-c2012-5.1]: violation of misra-c2012-5.1\n{Kind}: {Name}\nFirst identifier location: {Loc}\nDuplicated identifier location: {OtherLoc}",
-            "translation": "[C1109][misra-c2012-5.1]: Violation of MISRA C:2012 Rule 5.1: External identifiers shall be distinct (The identifiers at {Loc} and {OtherLoc} are not distinct)",
+            "id": "[C1109][misra-c2012-5.1]: violation of misra-c2012-5.1\n{Kind}: {Name}\nFirst identifier location: {Loc}\nDuplicated identifier '{ExternalMessage}' location: {OtherLoc}",
+            "message": "[C1109][misra-c2012-5.1]: violation of misra-c2012-5.1\n{Kind}: {Name}\nFirst identifier location: {Loc}\nDuplicated identifier '{ExternalMessage}' location: {OtherLoc}",
+            "translation": "[C1109][misra-c2012-5.1]: Violation of MISRA C:2012 Rule 5.1: External identifiers shall be distinct (The identifiers '{Name}' and '{ExternalMessage}' at {Loc} and {OtherLoc} are not distinct)",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
@@ -389,11 +389,19 @@
                     "expr": "result.Loc"
                 },
                 {
-                    "id": "OtherLoc",
+                    "id": "ExternalMessage",
                     "string": "%[4]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 4,
+                    "expr": "result.ExternalMessage"
+                },
+                {
+                    "id": "OtherLoc",
+                    "string": "%[5]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 5,
                     "expr": "result.OtherLoc"
                 }
             ],
@@ -1018,9 +1026,9 @@
             "fuzzy": true
         },
         {
-            "id": "[C0508][misra-c2012-8.7]: violation of misra-c2012-8.7\nExtern function or variable is only called at one translation unit\nfunction name: {Name}\nlocation: {Loc}",
-            "message": "[C0508][misra-c2012-8.7]: violation of misra-c2012-8.7\nExtern function or variable is only called at one translation unit\nfunction name: {Name}\nlocation: {Loc}",
-            "translation": "[C0508][misra-c2012-8.7]: Violation of MISRA C:2012 Rule 8.7: Functions and objects should not be defined with external linkage if they are referenced in only one translation unit (\"{Name}\" at {Loc} is defined with external linkage)",
+            "id": "[C0508][misra-c2012-8.7]: violation of misra-c2012-8.7\nExtern function or variable is only called at one translation unit\nfunction name: {Name}\nused location: {Loc}\ndeclared location: {OtherLoc}",
+            "message": "[C0508][misra-c2012-8.7]: violation of misra-c2012-8.7\nExtern function or variable is only called at one translation unit\nfunction name: {Name}\nused location: {Loc}\ndeclared location: {OtherLoc}",
+            "translation": "[C0508][misra-c2012-8.7]: Violation of MISRA C:2012 Rule 8.7: Functions and objects should not be defined with external linkage if they are referenced in only one translation unit (\"{Name}\" referenced at {Loc} is defined at {OtherLoc} with external linkage)",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
@@ -1038,6 +1046,14 @@
                     "underlyingType": "string",
                     "argNum": 2,
                     "expr": "result.Loc"
+                },
+                {
+                    "id": "OtherLoc",
+                    "string": "%[3]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 3,
+                    "expr": "result.OtherLoc"
                 }
             ],
             "fuzzy": true
@@ -1186,33 +1202,41 @@
             "fuzzy": true
         },
         {
-            "id": "[C1409][misra-c2012-11.1]: violation of misra-conversions violation of misra-c2012-11.1\nsource type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
-            "message": "[C1409][misra-c2012-11.1]: violation of misra-conversions violation of misra-c2012-11.1\nsource type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
-            "translation": "[C1409][misra-c2012-11.1]: Violation of MISRA C:2012 Rule 11.1: Conversions shall not be performed between a pointer to a function and any other type (conversion from \"{SourceType}\" to \"{DestinationType}\" at {Loc})",
+            "id": "[C1409][misra-c2012-11.1]: violation of misra-conversions violation of misra-c2012-11.1\nobject name: {Name}\nsource type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
+            "message": "[C1409][misra-c2012-11.1]: violation of misra-conversions violation of misra-c2012-11.1\nobject name: {Name}\nsource type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
+            "translation": "[C1409][misra-c2012-11.1]: Violation of MISRA C:2012 Rule 11.1: Conversions shall not be performed between a pointer to a function and any other type (\"{Name}\" from \"{SourceType}\" to \"{DestinationType}\" at {Loc})",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "SourceType",
+                    "id": "Name",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "result.SourceType"
+                    "expr": "result.Name"
                 },
                 {
-                    "id": "DestinationType",
+                    "id": "SourceType",
                     "string": "%[2]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 2,
-                    "expr": "result.DestinationType"
+                    "expr": "result.SourceType"
                 },
                 {
-                    "id": "Loc",
+                    "id": "DestinationType",
                     "string": "%[3]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 3,
+                    "expr": "result.DestinationType"
+                },
+                {
+                    "id": "Loc",
+                    "string": "%[4]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 4,
                     "expr": "result.Loc"
                 }
             ],
@@ -1236,66 +1260,82 @@
             "fuzzy": true
         },
         {
-            "id": "[C1408][misra-c2012-11.2]: violation of misra-conversions violation of misra-c2012-11.2\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
-            "message": "[C1408][misra-c2012-11.2]: violation of misra-conversions violation of misra-c2012-11.2\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
-            "translation": "[C1408][misra-c2012-11.2]: Violation of MISRA C:2012 Rule 11.2: Conversions shall not be performed between a pointer to an incomplete type and any other type (conversion from \"pointer to {SourceType}\" to \"pointer to {DestinationType}\" at {Loc})",
+            "id": "[C1408][misra-c2012-11.2]: violation of misra-conversions violation of misra-c2012-11.2\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
+            "message": "[C1408][misra-c2012-11.2]: violation of misra-conversions violation of misra-c2012-11.2\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
+            "translation": "[C1408][misra-c2012-11.2]: Violation of MISRA C:2012 Rule 11.2: Conversions shall not be performed between a pointer to an incomplete type and any other type (\"{Name}\" from \"pointer to {SourceType}\" to \"pointer to {DestinationType}\" at {Loc})",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "SourceType",
+                    "id": "Name",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "result.SourceType"
+                    "expr": "result.Name"
                 },
                 {
-                    "id": "DestinationType",
+                    "id": "SourceType",
                     "string": "%[2]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 2,
-                    "expr": "result.DestinationType"
+                    "expr": "result.SourceType"
                 },
                 {
-                    "id": "Loc",
+                    "id": "DestinationType",
                     "string": "%[3]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 3,
+                    "expr": "result.DestinationType"
+                },
+                {
+                    "id": "Loc",
+                    "string": "%[4]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 4,
                     "expr": "result.Loc"
                 }
             ],
             "fuzzy": true
         },
         {
-            "id": "[C1407][misra-c2012-11.3]: violation of misra-conversions violation of misra-c2012-11.3\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
-            "message": "[C1407][misra-c2012-11.3]: violation of misra-conversions violation of misra-c2012-11.3\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
-            "translation": "[C1407][misra-c2012-11.3]: Violation of MISRA C:2012 Rule 11.3: A cast shall not be performed between a pointer to object type and a pointer to a different object type (conversion from \"pointer to {SourceType}\" to \"pointer to {DestinationType}\" at {Loc})",
+            "id": "[C1407][misra-c2012-11.3]: violation of misra-conversions violation of misra-c2012-11.3\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
+            "message": "[C1407][misra-c2012-11.3]: violation of misra-conversions violation of misra-c2012-11.3\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
+            "translation": "[C1407][misra-c2012-11.3]: Violation of MISRA C:2012 Rule 11.3: A cast shall not be performed between a pointer to object type and a pointer to a different object type (\"{Name}\" from \"pointer to {SourceType}\" to \"pointer to {DestinationType}\" at {Loc})",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "SourceType",
+                    "id": "Name",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "result.SourceType"
+                    "expr": "result.Name"
                 },
                 {
-                    "id": "DestinationType",
+                    "id": "SourceType",
                     "string": "%[2]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 2,
-                    "expr": "result.DestinationType"
+                    "expr": "result.SourceType"
                 },
                 {
-                    "id": "Loc",
+                    "id": "DestinationType",
                     "string": "%[3]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 3,
+                    "expr": "result.DestinationType"
+                },
+                {
+                    "id": "Loc",
+                    "string": "%[4]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 4,
                     "expr": "result.Loc"
                 }
             ],
@@ -1309,66 +1349,82 @@
             "fuzzy": true
         },
         {
-            "id": "[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nsource type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
-            "message": "[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nsource type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
-            "translation": "[C1406][misra-c2012-11.4]: Violation of MISRA C:2012 Rule 11.4: A conversion should not be performed between a pointer to object and an integer type (conversion from \"{SourceType}\" to \"pointer to {DestinationType} type\" at {Loc})",
+            "id": "[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nobject name: {Name}\nsource type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
+            "message": "[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nobject name: {Name}\nsource type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
+            "translation": "[C1406][misra-c2012-11.4]: Violation of MISRA C:2012 Rule 11.4: A conversion should not be performed between a pointer to object and an integer type (\"{Name}\" from \"{SourceType}\" to \"pointer to {DestinationType} type\" at {Loc})",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "SourceType",
+                    "id": "Name",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "result.SourceType"
+                    "expr": "result.Name"
                 },
                 {
-                    "id": "DestinationType",
+                    "id": "SourceType",
                     "string": "%[2]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 2,
-                    "expr": "result.DestinationType"
+                    "expr": "result.SourceType"
                 },
                 {
-                    "id": "Loc",
+                    "id": "DestinationType",
                     "string": "%[3]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 3,
+                    "expr": "result.DestinationType"
+                },
+                {
+                    "id": "Loc",
+                    "string": "%[4]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 4,
                     "expr": "result.Loc"
                 }
             ],
             "fuzzy": true
         },
         {
-            "id": "[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nsource pointer object type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
-            "message": "[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nsource pointer object type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
-            "translation": "[C1406][misra-c2012-11.4]: Violation of MISRA C:2012 Rule 11.4: A conversion should not be performed between a pointer to object and an integer type (conversion from \"pointer to {SourceType}\" to \"{DestinationType}\" at {Loc})",
+            "id": "[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
+            "message": "[C1406][misra-c2012-11.4]: violation of misra-conversions violation of misra-c2012-11.4\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
+            "translation": "[C1406][misra-c2012-11.4]: Violation of MISRA C:2012 Rule 11.4: A conversion should not be performed between a pointer to object and an integer type (\"{Name}\" from \"pointer to {SourceType}\" to \"{DestinationType}\" at {Loc})",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "SourceType",
+                    "id": "Name",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "result.SourceType"
+                    "expr": "result.Name"
                 },
                 {
-                    "id": "DestinationType",
+                    "id": "SourceType",
                     "string": "%[2]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 2,
-                    "expr": "result.DestinationType"
+                    "expr": "result.SourceType"
                 },
                 {
-                    "id": "Loc",
+                    "id": "DestinationType",
                     "string": "%[3]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 3,
+                    "expr": "result.DestinationType"
+                },
+                {
+                    "id": "Loc",
+                    "string": "%[4]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 4,
                     "expr": "result.Loc"
                 }
             ],
@@ -1382,66 +1438,82 @@
             "fuzzy": true
         },
         {
-            "id": "[C1405][misra-c2012-11.5]: violation of misra-conversions violation of misra-c2012-11.5\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
-            "message": "[C1405][misra-c2012-11.5]: violation of misra-conversions violation of misra-c2012-11.5\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
-            "translation": "[C1405][misra-c2012-11.5]: Violation of MISRA C:2012 Rule 11.5: A conversion should not be performed from pointer to void into pointer to object (conversion from \"{SourceType}\" to \"pointer to {DestinationType}\" at {Loc})",
+            "id": "[C1405][misra-c2012-11.5]: violation of misra-conversions violation of misra-c2012-11.5\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
+            "message": "[C1405][misra-c2012-11.5]: violation of misra-conversions violation of misra-c2012-11.5\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}\nLocation: {Loc}",
+            "translation": "[C1405][misra-c2012-11.5]: Violation of MISRA C:2012 Rule 11.5: A conversion should not be performed from pointer to void into pointer to object (\"{Name}\" from \"{SourceType}\" to \"pointer to {DestinationType}\" at {Loc})",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "SourceType",
+                    "id": "Name",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "result.SourceType"
+                    "expr": "result.Name"
                 },
                 {
-                    "id": "DestinationType",
+                    "id": "SourceType",
                     "string": "%[2]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 2,
-                    "expr": "result.DestinationType"
+                    "expr": "result.SourceType"
                 },
                 {
-                    "id": "Loc",
+                    "id": "DestinationType",
                     "string": "%[3]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 3,
+                    "expr": "result.DestinationType"
+                },
+                {
+                    "id": "Loc",
+                    "string": "%[4]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 4,
                     "expr": "result.Loc"
                 }
             ],
             "fuzzy": true
         },
         {
-            "id": "[C1404][misra-c2012-11.6]: violation of misra-conversions violation of misra-c2012-11.6\nsource object type: {SourceType}\ndestination object type: {DestinationType}\nLocation: {Loc}",
-            "message": "[C1404][misra-c2012-11.6]: violation of misra-conversions violation of misra-c2012-11.6\nsource object type: {SourceType}\ndestination object type: {DestinationType}\nLocation: {Loc}",
-            "translation": "[C1404][misra-c2012-11.6]: Violation of MISRA C:2012 Rule 11.6: A cast shall not be performed between pointer to void and an arithmetic type (conversion from \"{SourceType}\" to \"{DestinationType}\" at {Loc})",
+            "id": "[C1404][misra-c2012-11.6]: violation of misra-conversions violation of misra-c2012-11.6\nobject name: {Name}\nsource object type: {SourceType}\ndestination object type: {DestinationType}\nLocation: {Loc}",
+            "message": "[C1404][misra-c2012-11.6]: violation of misra-conversions violation of misra-c2012-11.6\nobject name: {Name}\nsource object type: {SourceType}\ndestination object type: {DestinationType}\nLocation: {Loc}",
+            "translation": "[C1404][misra-c2012-11.6]: Violation of MISRA C:2012 Rule 11.6: A cast shall not be performed between pointer to void and an arithmetic type (\"{Name}\" from \"{SourceType}\" to \"{DestinationType}\" at {Loc})",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "SourceType",
+                    "id": "Name",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "result.SourceType"
+                    "expr": "result.Name"
                 },
                 {
-                    "id": "DestinationType",
+                    "id": "SourceType",
                     "string": "%[2]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 2,
-                    "expr": "result.DestinationType"
+                    "expr": "result.SourceType"
                 },
                 {
-                    "id": "Loc",
+                    "id": "DestinationType",
                     "string": "%[3]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 3,
+                    "expr": "result.DestinationType"
+                },
+                {
+                    "id": "Loc",
+                    "string": "%[4]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 4,
                     "expr": "result.Loc"
                 }
             ],
@@ -1465,33 +1537,41 @@
             "fuzzy": true
         },
         {
-            "id": "[C1403][misra-c2012-11.7]: violation of misra-conversions violation of misra-c2012-11.7\nsource type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
-            "message": "[C1403][misra-c2012-11.7]: violation of misra-conversions violation of misra-c2012-11.7\nsource type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
-            "translation": "[C1403][misra-c2012-11.7]: Violation of MISRA C:2012 Rule 11.7: A cast shall not be performed between pointer to object and a non-integer arithmetic type (conversion from \"{SourceType}\" to \"{DestinationType}\" at {Loc})",
+            "id": "[C1403][misra-c2012-11.7]: violation of misra-conversions violation of misra-c2012-11.7\nobject name: {Name}\nsource type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
+            "message": "[C1403][misra-c2012-11.7]: violation of misra-conversions violation of misra-c2012-11.7\nobject name: {Name}\nsource type: {SourceType}\ndestination type: {DestinationType}\nLocation: {Loc}",
+            "translation": "[C1403][misra-c2012-11.7]: Violation of MISRA C:2012 Rule 11.7: A cast shall not be performed between pointer to object and a non-integer arithmetic type (\"{Name}\" from \"{SourceType}\" to \"{DestinationType}\" at {Loc})",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "SourceType",
+                    "id": "Name",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "result.SourceType"
+                    "expr": "result.Name"
                 },
                 {
-                    "id": "DestinationType",
+                    "id": "SourceType",
                     "string": "%[2]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 2,
-                    "expr": "result.DestinationType"
+                    "expr": "result.SourceType"
                 },
                 {
-                    "id": "Loc",
+                    "id": "DestinationType",
                     "string": "%[3]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 3,
+                    "expr": "result.DestinationType"
+                },
+                {
+                    "id": "Loc",
+                    "string": "%[4]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 4,
                     "expr": "result.Loc"
                 }
             ],
@@ -1515,25 +1595,33 @@
             "fuzzy": true
         },
         {
-            "id": "[C1402][misra-c2012-11.8]: violation of misra-conversions violation of misra-c2012-11.8\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}",
-            "message": "[C1402][misra-c2012-11.8]: violation of misra-conversions violation of misra-c2012-11.8\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}",
-            "translation": "[C1402][misra-c2012-11.8]: Violation of MISRA C:2012 Rule 11.8: A cast shall not remove any const or volatile qualification from the type pointed to by a pointer (conversion from \"pointer to {SourceType}\" to \"pointer to {DestinationType}\")",
+            "id": "[C1402][misra-c2012-11.8]: violation of misra-conversions violation of misra-c2012-11.8\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}",
+            "message": "[C1402][misra-c2012-11.8]: violation of misra-conversions violation of misra-c2012-11.8\nobject name: {Name}\nsource pointer object type: {SourceType}\ndestination pointer object type: {DestinationType}",
+            "translation": "[C1402][misra-c2012-11.8]: Violation of MISRA C:2012 Rule 11.8: A cast shall not remove any const or volatile qualification from the type pointed to by a pointer (\"{Name}\" from \"pointer to {SourceType}\" to \"pointer to {DestinationType}\")",
             "translatorComment": "Copied from source.",
             "placeholders": [
                 {
-                    "id": "SourceType",
+                    "id": "Name",
                     "string": "%[1]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 1,
-                    "expr": "result.SourceType"
+                    "expr": "result.Name"
                 },
                 {
-                    "id": "DestinationType",
+                    "id": "SourceType",
                     "string": "%[2]s",
                     "type": "string",
                     "underlyingType": "string",
                     "argNum": 2,
+                    "expr": "result.SourceType"
+                },
+                {
+                    "id": "DestinationType",
+                    "string": "%[3]s",
+                    "type": "string",
+                    "underlyingType": "string",
+                    "argNum": 3,
                     "expr": "result.DestinationType"
                 }
             ],

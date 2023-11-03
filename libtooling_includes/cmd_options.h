@@ -25,6 +25,11 @@ llvm::cl::opt<int> limit("Limit", llvm::cl::desc("Limit count, default 31"),
                          llvm::cl::init(31),
                          llvm::cl::cat(ns_libtooling_checker));
 
+llvm::cl::opt<bool> implicit_decl(
+    "ImplicitDecl",
+    llvm::cl::desc("Whether consider implicit declarations, default true"),
+    llvm::cl::init(true), llvm::cl::cat(ns_libtooling_checker));
+
 llvm::cl::opt<int> struct_member_limit(
     "StructMemberLimit",
     llvm::cl::desc("Struct member limit count, default 1023"),
@@ -84,6 +89,21 @@ llvm::cl::opt<int> macro_parm_limit(
     llvm::cl::desc(
         "parameter limit count in one macro definition, default 127"),
     llvm::cl::init(127), llvm::cl::cat(ns_libtooling_checker));
+
+llvm::cl::opt<int> macro_arg_limit(
+    "MacroArgLimit",
+    llvm::cl::desc("argument limit count in one macro invocation, default 127"),
+    llvm::cl::init(127), llvm::cl::cat(ns_libtooling_checker));
+
+llvm::cl::opt<int> nested_block_limit(
+    "NestedBlockLimit",
+    llvm::cl::desc("nesting block level limit count, default 127"),
+    llvm::cl::init(127), llvm::cl::cat(ns_libtooling_checker));
+
+llvm::cl::opt<int> nested_include_limit(
+    "NestedIncludeLimit",
+    llvm::cl::desc("nesting level limit count for #include files, default 15"),
+    llvm::cl::init(15), llvm::cl::cat(ns_libtooling_checker));
 
 llvm::cl::opt<bool> aggressive_mode(
     "AggressiveMode",

@@ -6,18 +6,20 @@
 // consts, funcs, and types into a common source file, per GOOS.
 //
 // Usage:
-//     $ mkmerge -out MERGED FILE [FILE ...]
+//
+//	$ mkmerge -out MERGED FILE [FILE ...]
 //
 // Example:
-//     # Remove all common consts, funcs, and types from zerrors_linux_*.go
-//     # and write the common code into zerrors_linux.go
-//     $ mkmerge -out zerrors_linux.go zerrors_linux_*.go
+//
+//	# Remove all common consts, funcs, and types from zerrors_linux_*.go
+//	# and write the common code into zerrors_linux.go
+//	$ mkmerge -out zerrors_linux.go zerrors_linux_*.go
 //
 // mkmerge performs the merge in the following steps:
-//     1. Construct the set of common code that is idential in all
-//        architecture-specific files.
-//     2. Write this common code to the merged file.
-//     3. Remove the common code from all architecture-specific files.
+//  1. Construct the set of common code that is identical in all
+//     architecture-specific files.
+//  2. Write this common code to the merged file.
+//  3. Remove the common code from all architecture-specific files.
 package main
 
 import (
@@ -30,7 +32,6 @@ import (
 	"go/parser"
 	"go/token"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -431,7 +432,7 @@ func merge(mergedFile string, archFiles ...string) error {
 	// Read architecture files
 	var inSrc []srcFile
 	for _, file := range archFiles {
-		src, err := ioutil.ReadFile(file)
+		src, err := os.ReadFile(file)
 		if err != nil {
 			return fmt.Errorf("cannot read archfile %s: %w", file, err)
 		}
@@ -483,7 +484,7 @@ func merge(mergedFile string, archFiles ...string) error {
 		if err != nil {
 			return err
 		}
-		err = ioutil.WriteFile(inFile.name, src, 0644)
+		err = os.WriteFile(inFile.name, src, 0644)
 		if err != nil {
 			return err
 		}

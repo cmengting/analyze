@@ -14,7 +14,6 @@ import (
 	"flag"
 	"fmt"
 	"go/format"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -256,13 +255,7 @@ func copyPackage(dirSrc, dirDst, search, replace string) {
 			filepath.Dir(file) != dirSrc {
 			return nil
 		}
-		if strings.HasPrefix(base, "tables") {
-			if !strings.HasSuffix(base, gen.UnicodeVersion()+".go") {
-				return nil
-			}
-			base = "tables.go"
-		}
-		b, err := ioutil.ReadFile(file)
+		b, err := os.ReadFile(file)
 		if err != nil || bytes.Contains(b, []byte("\n// +build ignore")) {
 			return err
 		}
@@ -281,7 +274,7 @@ func copyPackage(dirSrc, dirDst, search, replace string) {
 		}
 		file = filepath.Join(dirDst, base)
 		vprintf("=== COPY %s\n", file)
-		return ioutil.WriteFile(file, b, 0666)
+		return os.WriteFile(file, b, 0666)
 	})
 	if err != nil {
 		fmt.Println("Copying exported files failed:", err)

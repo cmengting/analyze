@@ -25,6 +25,7 @@ static cl::extrahelp common_help(CommonOptionsParser::HelpMessage);
 extern cl::opt<std::string> results_path;
 extern cl::opt<bool> case_sensitive;
 extern cl::opt<int> limit;
+extern cl::opt<bool> implicit_decl;
 
 namespace misra {
 namespace rule_5_1 {
@@ -53,7 +54,7 @@ int rule_5_1(int argc, char** argv) {
                  misra::libtooling_utils::GetCTUSourceFile(path_list[0]));
   analyzer::proto::ResultsList all_results;
   misra::rule_5_1::Checker checker;
-  checker.Init(limit, case_sensitive, &all_results);
+  checker.Init(limit, case_sensitive, implicit_decl, &all_results);
   int status =
       tool.run(newFrontendActionFactory(checker.GetMatchFinder()).get());
   LOG(INFO) << "libtooling status: " << status;

@@ -27,7 +27,9 @@ Selected commands:
 - `cmd/toolstash` is a utility to simplify working with multiple versions of the Go toolchain.
 
 These commands may be fetched with a command such as
-`go install golang.org/x/tools/cmd/goimports@latest`.
+```
+go install golang.org/x/tools/cmd/goimports@latest
+```
 
 Selected packages:
 
@@ -60,13 +62,11 @@ Selected packages:
 
 Numerous other packages provide more esoteric functionality.
 
-<!-- Some that didn't make the cut: 
+<!-- Some that didn't make the cut:
 
 golang.org/x/tools/benchmark/parse
 golang.org/x/tools/go/ast/astutil
 golang.org/x/tools/go/types/typeutil
-golang.org/x/tools/go/vcs
-golang.org/x/tools/godoc
 golang.org/x/tools/playground
 golang.org/x/tools/present
 golang.org/x/tools/refactor/importgraph

@@ -8,7 +8,7 @@
 package unix_test
 
 import (
-	"io/ioutil"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -19,14 +19,9 @@ import (
 
 func TestSendfile(t *testing.T) {
 	// Set up source data file.
-	tempDir, err := ioutil.TempDir("", "TestSendfile")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tempDir)
-	name := filepath.Join(tempDir, "source")
+	name := filepath.Join(t.TempDir(), "source")
 	const contents = "contents"
-	err = ioutil.WriteFile(name, []byte(contents), 0666)
+	err := os.WriteFile(name, []byte(contents), 0666)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +41,7 @@ func TestSendfile(t *testing.T) {
 			return
 		}
 		defer conn.Close()
-		b, err := ioutil.ReadAll(conn)
+		b, err := io.ReadAll(conn)
 		if err != nil {
 			t.Errorf("failed to read: %v", err)
 			return

@@ -22,20 +22,22 @@ namespace {
 
 string GetDeclName(const NamedDecl* decl) { return decl->getNameAsString(); }
 
-void ReportSingleExternError(string name, string loc, int line_number,
+void ReportSingleExternError(string name, misra::rule_8_7::location l,
                              ResultsList* results_list) {
   std::string error_message = absl::StrFormat(
       "[C0508][misra-c2012-8.7]: violation of misra-c2012-8.7\n"
       "Extern function or variable is only called at one translation unit\n"
       "function name: %s\n"
       "location: %s",
-      name, loc);
-  analyzer::proto::Result* pb_result =
-      AddResultToResultsList(results_list, loc, line_number, error_message);
+      name, l.loc);
+  analyzer::proto::Result* pb_result = AddResultToResultsList(
+      results_list, l.path, l.line_number, error_message);
   pb_result->set_error_kind(
       analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_8_7);
   pb_result->set_name(name);
-  pb_result->set_loc(loc);
+  pb_result->set_other_filename(l.first_decl_path);
+  pb_result->set_loc(l.loc);
+  pb_result->set_other_loc(l.first_decl_loc);
   LOG(INFO) << error_message;
 }
 
@@ -46,31 +48,68 @@ namespace rule_8_7 {
 
 class ExternalVDCallback : public MatchFinder::MatchCallback {
  public:
-  void Init(
-      ResultsList* results_list, MatchFinder* finder,
-      unordered_map<string, vector<pair<string, int>>>* vd_name_locations_) {
+  void Init(ResultsList* results_list, MatchFinder* finder,
+            unordered_map<string, vector<location>>* vd_name_locations_) {
     results_list_ = results_list;
-    finder->addMatcher(declRefExpr().bind("dre"), this);
+    finder->addMatcher(
+        declRefExpr(unless(isExpansionInSystemHeader())).bind("dre"), this);
+    finder->addMatcher(varDecl(unless(isExpansionInSystemHeader())).bind("vd"),
+                       this);
     name_locations_ = vd_name_locations_;
   }
 
   void run(const MatchFinder::MatchResult& result) override {
-    const DeclRefExpr* dre = result.Nodes.getNodeAs<DeclRefExpr>("dre");
     ASTContext* context = result.Context;
-    if (libtooling_utils::IsInSystemHeader(dre, context)) {
-      return;
+    const DeclRefExpr* dre = result.Nodes.getNodeAs<DeclRefExpr>("dre");
+    string path, loc, name;
+    int line_number;
+    const Decl* first_decl = nullptr;
+    if (dre) {
+      const ValueDecl* vald = dre->getDecl();
+      if (libtooling_utils::IsInSystemHeader(vald, context)) {
+        return;
+      }
+      if (!vald->hasExternalFormalLinkage()) {
+        return;
+      }
+      path = libtooling_utils::GetFilename(dre, result.SourceManager);
+      line_number = libtooling_utils::GetLine(dre, result.SourceManager);
+      loc = libtooling_utils::GetLocation(dre, result.SourceManager);
+      first_decl = vald->getCanonicalDecl();
+      name = GetDeclName(vald);
     }
-    const ValueDecl* vd = dre->getDecl();
-    if (libtooling_utils::IsInSystemHeader(vd, context)) {
-      return;
-    }
-    if (!vd->hasExternalFormalLinkage()) {
-      return;
-    }
-    string path = libtooling_utils::GetFilename(dre, result.SourceManager);
-    int line_number = libtooling_utils::GetLine(dre, result.SourceManager);
 
-    auto name = GetDeclName(vd);
+    const VarDecl* vd = result.Nodes.getNodeAs<VarDecl>("vd");
+    if (vd) {
+      if (!vd->isFileVarDecl() || !vd->hasExternalFormalLinkage()) {
+        return;
+      }
+      if (vd->isThisDeclarationADefinition() ==
+          VarDecl::DefinitionKind::DeclarationOnly) {
+        // ignore DeclarationOnly case.
+        return;
+      }
+      path = libtooling_utils::GetFilename(vd, result.SourceManager);
+      line_number = libtooling_utils::GetLine(vd, result.SourceManager);
+      loc = libtooling_utils::GetLocation(vd, result.SourceManager);
+      first_decl = vd->getFirstDecl();
+      name = GetDeclName(vd);
+    }
+
+    while (first_decl) {
+      if (first_decl->isFirstDecl()) {
+        break;
+      }
+      first_decl = first_decl->getPreviousDecl();
+    }
+    if (!first_decl) {
+      return;
+    }
+    string first_decl_path =
+        libtooling_utils::GetFilename(first_decl, result.SourceManager);
+    string first_decl_loc =
+        libtooling_utils::GetLocation(first_decl, result.SourceManager);
+    location l = {path, line_number, loc, first_decl_path, first_decl_loc};
     // get the name location key-value pair we stored before
     auto it = name_locations_->find(name);
     if (it != name_locations_->end()) {
@@ -78,27 +117,26 @@ class ExternalVDCallback : public MatchFinder::MatchCallback {
       // function/value call then we should not add current ce to
       // name_locations_
       for (auto path_pair : it->second) {
-        if (path_pair.first == path) {
+        if (path_pair.path == path) {
           return;
         }
       }
-      it->second.push_back(make_pair(path, line_number));
+      it->second.push_back(l);
     } else {
-      name_locations_->emplace(make_pair(
-          name, vector<pair<string, int>>{make_pair(path, line_number)}));
+      name_locations_->emplace(make_pair(name, vector<location>{l}));
     }
   }
 
  private:
   ResultsList* results_list_;
-  unordered_map<string, vector<pair<string, int>>>* name_locations_;
+  unordered_map<string, vector<location>>* name_locations_;
 };
 
 void Checker::Run() {
   for (auto& name_loc : vd_name_locations_) {
     if (name_loc.second.size() == 1) {
-      ReportSingleExternError(name_loc.first, name_loc.second[0].first,
-                              name_loc.second[0].second, results_list_);
+      ReportSingleExternError(name_loc.first, name_loc.second[0],
+                              results_list_);
     }
   }
 }
