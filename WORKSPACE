@@ -97,10 +97,3 @@ local_repository(
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 
 protobuf_deps()
-
-local_repository(
-    name = "hedron_compile_commands",
-    path = "third_party/github.com/hedronvision/bazel-compile-commands-extractor",
-)
-load("@hedron_compile_commands//:workspace_setup.bzl", "hedron_compile_commands_setup")
-hedron_compile_commands_setup()
