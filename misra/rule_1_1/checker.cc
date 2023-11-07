@@ -1,26 +1,22 @@
 /*
-Copyright 2023 Naive Systems Ltd.
+NaiveSystems Analyze - A tool for static code analysis
+Copyright (C) 2023  Naive Systems Ltd.
 
-This software contains information and intellectual property that is
-confidential and proprietary to Naive Systems Ltd. and its affiliates.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "misra/rule_1_1/checker.h"
-
-#include <glog/logging.h>
-
-#include <string>
-#include <unordered_map>
-#include <vector>
-
-#include "absl/strings/str_format.h"
-#include "misra/libtooling_utils/libtooling_utils.h"
-
-using namespace std;
-using namespace clang;
-using namespace clang::ast_matchers;
-using namespace misra::proto_util;
-using analyzer::proto::ResultsList;
 
 namespace {
 
@@ -174,7 +170,7 @@ void ReportMacroArgError(int macro_arg_limit, int macro_arg_count,
   pb_result->set_error_kind(
       analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_1_1_MACRO_ARG);
   pb_result->set_macro_arg_limit(to_string(macro_arg_limit));
-  pb_result->set_macro_arg_count(to_string(macro_arg_limit));
+  pb_result->set_macro_arg_count(to_string(macro_arg_count));
   pb_result->set_name(macro_id);
 }
 
@@ -189,6 +185,42 @@ void ReportNestedIncludeError(int nested_include_limit,
   pb_result->set_nested_include_limit(to_string(nested_include_limit));
   pb_result->set_nested_include_count(to_string(nested_include_count));
   pb_result->set_name(file_name);
+}
+
+void ReportInternalOrMacroIDCharError(int iom_id_char_limit,
+                                      int iom_id_char_count,
+                                      string significant_id, string path,
+                                      int line_number,
+                                      ResultsList* results_list) {
+  analyzer::proto::Result* pb_result =
+      AddResultToResultsList(results_list, path, line_number, error_message);
+  pb_result->set_error_kind(
+      analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_1_1_IOM_ID_CHAR);
+  pb_result->set_iom_id_char_limit(to_string(iom_id_char_limit));
+  pb_result->set_iom_id_char_count(to_string(iom_id_char_count));
+  pb_result->set_name(significant_id);
+}
+
+void ReportNestedCondIncluError(int nested_cond_inclu_limit,
+                                int nested_cond_inclu_count, string path,
+                                int line_number, ResultsList* results_list) {
+  analyzer::proto::Result* pb_result =
+      AddResultToResultsList(results_list, path, line_number, error_message);
+  pb_result->set_error_kind(
+      analyzer::proto::
+          Result_ErrorKind_MISRA_C_2012_RULE_1_1_NESTED_COND_INCLU);
+  pb_result->set_nested_cond_inclu_limit(to_string(nested_cond_inclu_limit));
+  pb_result->set_nested_cond_inclu_count(to_string(nested_cond_inclu_count));
+}
+
+void ReportBlockIDError(int block_id_limit, int block_id_count, string path,
+                        int line_number, ResultsList* results_list) {
+  analyzer::proto::Result* pb_result =
+      AddResultToResultsList(results_list, path, line_number, error_message);
+  pb_result->set_error_kind(
+      analyzer::proto::Result_ErrorKind_MISRA_C_2012_RULE_1_1_BLOCK_ID);
+  pb_result->set_block_id_limit(to_string(block_id_limit));
+  pb_result->set_block_id_count(to_string(block_id_count));
 }
 
 }  // namespace
@@ -293,24 +325,32 @@ class NestedRecordCallback : public MatchFinder::MatchCallback {
 
   void run(const MatchFinder::MatchResult& result) override {
     const RecordDecl* rd = result.Nodes.getNodeAs<RecordDecl>("rd");
-    int depth = 0;
-    const RecordDecl* current = rd;
-    while (current) {
-      depth++;
-      if (depth > nested_record_limit_) {
-        ReportNestedRecordError(
-            nested_record_limit_, depth, rd->getQualifiedNameAsString(),
-            libtooling_utils::GetFilename(rd, result.SourceManager),
-            libtooling_utils::GetLine(rd, result.SourceManager), results_list_);
-        return;
-      }
-      current = dyn_cast_or_null<RecordDecl>(current->getLexicalParent());
-    }
+    if (dyn_cast_or_null<RecordDecl>(rd->getLexicalParent())) return;
+    depth_, max_depth_ = 0;
+    CheckDepth(rd);
+    if (max_depth_ > nested_record_limit_)
+      ReportNestedRecordError(
+          nested_record_limit_, max_depth_, rd->getQualifiedNameAsString(),
+          libtooling_utils::GetFilename(rd, result.SourceManager),
+          libtooling_utils::GetLine(rd, result.SourceManager), results_list_);
   }
 
  private:
   int nested_record_limit_;
+  unsigned depth_ = 0;
+  unsigned max_depth_ = 0;
   ResultsList* results_list_;
+
+  void CheckDepth(const RecordDecl* rd) {
+    if (!rd) return;
+    depth_++;
+    max_depth_ = max<unsigned>(depth_, max_depth_);
+    for (const Decl* decl : rd->decls()) {
+      if (const RecordDecl* rd = dyn_cast_or_null<RecordDecl>(decl))
+        CheckDepth(rd);
+    }
+    depth_--;
+  }
 };
 
 class NestedExprCallback : public MatchFinder::MatchCallback {
@@ -536,6 +576,93 @@ class NestedBlockCallback : public MatchFinder::MatchCallback {
   ResultsList* results_list_;
 };
 
+map<string, Identifier> internal_or_macro_significant_ids{};
+
+class InternIDCharCallback : public MatchFinder::MatchCallback {
+ public:
+  void Init(int iom_id_char_limit, ResultsList* results_list,
+            MatchFinder* finder) {
+    iom_id_char_limit_ = iom_id_char_limit;
+    results_list_ = results_list;
+    finder->addMatcher(
+        namedDecl(unless(isExpansionInSystemHeader())).bind("nd"), this);
+  }
+
+  void run(const MatchFinder::MatchResult& result) override {
+    const NamedDecl* nd = result.Nodes.getNodeAs<NamedDecl>("nd");
+    string decl_name = nd->getNameAsString();
+    string significant_decl_name =
+        decl_name.substr(0, min<int>(decl_name.length(), iom_id_char_limit_));
+    if (nd->getFormalLinkage() == Linkage::InternalLinkage) {
+      if (internal_or_macro_significant_ids.find(significant_decl_name) !=
+          internal_or_macro_significant_ids.end()) {
+        ReportInternalOrMacroIDCharError(
+            iom_id_char_limit_, decl_name.length(), significant_decl_name,
+            libtooling_utils::GetFilename(nd, result.SourceManager),
+            libtooling_utils::GetLine(nd, result.SourceManager), results_list_);
+      } else {
+        internal_or_macro_significant_ids[significant_decl_name] =
+            Identifier{decl_name, nd->getLocation()};
+      }
+    }
+  }
+
+ private:
+  int iom_id_char_limit_;
+  ResultsList* results_list_;
+};
+
+struct Info {
+  string file;
+  int line;
+  int count;
+};
+
+std::map<string, Info> block_ids;
+
+class BlockIDCallback : public MatchFinder::MatchCallback {
+ public:
+  void Init(int block_id_limit, ResultsList* results_list,
+            MatchFinder* finder) {
+    block_id_limit_ = block_id_limit;
+    results_list_ = results_list;
+    finder->addMatcher(compoundStmt(unless(isExpansionInSystemHeader()),
+                                    forEachDescendant(varDecl().bind("vd")))
+                           .bind("cstmt"),
+                       this);
+  }
+
+  void run(const MatchFinder::MatchResult& result) override {
+    const CompoundStmt* cstmt = result.Nodes.getNodeAs<CompoundStmt>("cstmt");
+    const VarDecl* vd = result.Nodes.getNodeAs<VarDecl>("vd");
+    if (cstmt && vd) {
+      // the loc is in a format as file:line:column, which is unique for a
+      // block
+      string loc = cstmt->getLBracLoc().printToString(*result.SourceManager);
+      if (block_ids.find(loc) == block_ids.end()) {
+        block_ids[loc] =
+            Info{libtooling_utils::GetFilename(cstmt, result.SourceManager),
+                 libtooling_utils::GetLine(cstmt, result.SourceManager), 0};
+      }
+      // record the depth of nesting
+      block_ids[loc].count++;
+    }
+  }
+
+  void Report() {
+    for (auto it = block_ids.begin(); it != block_ids.end(); ++it) {
+      if (it->second.count > block_id_limit_) {
+        ReportBlockIDError(block_id_limit_, it->second.count, it->second.file,
+                           it->second.line, results_list_);
+      }
+    }
+  }
+
+ private:
+  int block_id_limit_;
+  ResultsList* results_list_;
+};
+
 void PPCheck::MacroExpands(const Token& MacroNameTok, const MacroDefinition& MD,
                            SourceRange Range, const MacroArgs* Args) {
   unsigned arg_count = Args ? Args->getNumMacroArguments() : 0;
@@ -555,20 +682,58 @@ void PPCheck::LexedFileChanged(FileID FID, LexedFileChangeReason Reason,
 
   if (Reason == LexedFileChangeReason::EnterFile) {
     include_depth_++;
-    current_max_level_ = max<int>(include_depth_, current_max_level_);
+    include_max_depth_ = max<int>(include_depth_, include_max_depth_);
   } else {
     include_depth_--;
     if (include_depth_ == 0) {
       const FileEntry* fe = source_manager_->getFileEntryForID(FID);
-      if (current_max_level_ > limits_->nested_include_limit && fe)
+      if (include_max_depth_ > limits_->nested_include_limit && fe)
         ReportNestedIncludeError(
-            limits_->nested_include_limit, current_max_level_,
+            limits_->nested_include_limit, include_max_depth_,
             fe->getName().str(),
             libtooling_utils::GetLocationFilename(Loc, source_manager_),
             libtooling_utils::GetLocationLine(Loc, source_manager_),
             results_list_);
-      current_max_level_ = 0;
+      include_max_depth_ = 0;
     }
+  }
+}
+
+void PPCheck::If(SourceLocation Loc, SourceRange ConditionRange,
+                 ConditionValueKind ConditionValue) {
+  if (source_manager_->isInSystemHeader(Loc)) return;
+  cond_inclu_depth_++;
+  cond_inclu_max_depth_ =
+      max<unsigned>(cond_inclu_depth_, cond_inclu_max_depth_);
+}
+
+void PPCheck::Ifdef(SourceLocation Loc, const Token& MacroNameTok,
+                    const MacroDefinition& MD) {
+  if (source_manager_->isInSystemHeader(Loc)) return;
+  cond_inclu_depth_++;
+  cond_inclu_max_depth_ =
+      max<unsigned>(cond_inclu_depth_, cond_inclu_max_depth_);
+}
+
+void PPCheck::Ifndef(SourceLocation Loc, const Token& MacroNameTok,
+                     const MacroDefinition& MD) {
+  if (source_manager_->isInSystemHeader(Loc)) return;
+  cond_inclu_depth_++;
+  cond_inclu_max_depth_ =
+      max<unsigned>(cond_inclu_depth_, cond_inclu_max_depth_);
+}
+
+void PPCheck::Endif(SourceLocation Loc, SourceLocation IfLoc) {
+  if (source_manager_->isInSystemHeader(Loc)) return;
+  cond_inclu_depth_--;
+  if (cond_inclu_depth_ == 0) {
+    if (cond_inclu_max_depth_ > limits_->nested_cond_inclu_limit)
+      ReportNestedCondIncluError(
+          limits_->nested_cond_inclu_limit, cond_inclu_max_depth_,
+          libtooling_utils::GetLocationFilename(IfLoc, source_manager_),
+          libtooling_utils::GetLocationLine(IfLoc, source_manager_),
+          results_list_);
+    cond_inclu_max_depth_ = 0;
   }
 }
 
@@ -592,6 +757,8 @@ void ASTChecker::Init(LimitList* limits, ResultsList* results_list) {
   nested_block_callback_ = new NestedBlockCallback;
   nested_block_callback_->Init(limits->nested_block_limit, results_list_,
                                &finder_);
+  block_id_callback_ = new BlockIDCallback;
+  block_id_callback_->Init(limits->block_id_limit, results_list_, &finder_);
   switch_case_callback_ = new SwitchCaseCallback;
   switch_case_callback_->Init(limits->switch_case_limit, results_list_,
                               &finder_);
@@ -603,9 +770,15 @@ void ASTChecker::Init(LimitList* limits, ResultsList* results_list) {
                               &finder_);
   extern_id_callback_ = new ExternIDCallback;
   extern_id_callback_->Init(limits->extern_id_limit, results_list_, &finder_);
+  intern_id_char_callback_ = new InternIDCharCallback;
+  intern_id_char_callback_->Init(limits->iom_id_char_limit, results_list_,
+                                 &finder_);
 }
 
-void ASTChecker::Report() { nested_block_callback_->Report(); }
+void ASTChecker::Report() {
+  nested_block_callback_->Report();
+  block_id_callback_->Report();
+}
 
 void PreprocessConsumer::HandleTranslationUnit(ASTContext& context) {
   Preprocessor& pp = compiler_.getPreprocessor();
@@ -621,6 +794,10 @@ void PreprocessConsumer::HandleTranslationUnit(ASTContext& context) {
         !info->isBuiltinMacro() && sm.isInMainFile(sl)) {
       string macro_id = macro.first->getName().str();
       macro_ids.insert(macro_id);
+      internal_or_macro_significant_ids.emplace(
+          macro_id.substr(
+              0, min<int>(macro_id.length(), limits_->iom_id_char_limit)),
+          Identifier{macro_id, sl});
       if (macro_parm_count > limits_->macro_parm_limit)
         ReportMacroParmError(
             limits_->macro_parm_limit, macro_parm_count, macro_id,

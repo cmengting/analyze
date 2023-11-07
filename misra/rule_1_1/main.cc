@@ -1,17 +1,24 @@
 /*
-Copyright 2023 Naive Systems Ltd.
+NaiveSystems Analyze - A tool for static code analysis
+Copyright (C) 2023  Naive Systems Ltd.
 
-This software contains information and intellectual property that is
-confidential and proprietary to Naive Systems Ltd. and its affiliates.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <clang/Tooling/CommonOptionsParser.h>
-#include <clang/Tooling/Tooling.h>
-#include <glog/logging.h>
 #include <llvm/Support/JSON.h>
 
-#include "absl/strings/match.h"
-#include "misra/libtooling_utils/libtooling_utils.h"
 #include "misra/rule_1_1/checker.h"
 #include "misra/rule_1_1/lib.h"
 #include "podman_image/bigmain/suffix_rule.h"
@@ -36,6 +43,9 @@ extern cl::opt<int> macro_parm_limit;
 extern cl::opt<int> macro_arg_limit;
 extern cl::opt<int> nested_block_limit;
 extern cl::opt<int> nested_include_limit;
+extern cl::opt<int> iom_id_char_limit;
+extern cl::opt<int> nested_cond_inclu_limit;
+extern cl::opt<int> block_id_limit;
 
 namespace misra {
 namespace rule_1_1 {
@@ -59,24 +69,27 @@ int rule_1_1(int argc, char** argv) {
   ClangTool tool(options_parser.getCompilations(),
                  options_parser.getSourcePathList());
   analyzer::proto::ResultsList all_results;
-
   // running ASTChecker
   misra::rule_1_1::ASTChecker ast_checker;
-  LimitList limits{struct_member_limit, function_parm_limit, function_arg_limit,
-                   nested_record_limit, nested_expr_limit,   switch_case_limit,
-                   enum_constant_limit, string_char_limit,   extern_id_limit,
-                   macro_id_limit,      macro_parm_limit,    macro_arg_limit,
-                   nested_block_limit,  nested_include_limit};
-  ast_checker.Init(&limits, &all_results);
-  int status =
-      tool.run(newFrontendActionFactory(ast_checker.GetMatchFinder()).get());
-  ast_checker.Report();
-  LOG(INFO) << "libtooling status (ASTChecker): " << status << endl;
+  LimitList limits{
+      struct_member_limit,     function_parm_limit,  function_arg_limit,
+      nested_record_limit,     nested_expr_limit,    switch_case_limit,
+      enum_constant_limit,     string_char_limit,    extern_id_limit,
+      macro_id_limit,          macro_parm_limit,     macro_arg_limit,
+      nested_block_limit,      nested_include_limit, iom_id_char_limit,
+      nested_cond_inclu_limit, block_id_limit};
 
   // running PreprocessChecker
   misra::rule_1_1::PreprocessChecker preprocess_checker{&all_results, &limits};
-  status = tool.run(&preprocess_checker);
+  int status = tool.run(&preprocess_checker);
   LOG(INFO) << "libtooling status (PreprocessChecker): " << status << endl;
+
+  // running ASTChecker
+  ast_checker.Init(&limits, &all_results);
+  status =
+      tool.run(newFrontendActionFactory(ast_checker.GetMatchFinder()).get());
+  ast_checker.Report();
+  LOG(INFO) << "libtooling status (ASTChecker): " << status << endl;
 
   if (misra::proto_util::GenerateProtoFile(all_results, results_path).ok()) {
     LOG(INFO) << "rule 1.1 check done";

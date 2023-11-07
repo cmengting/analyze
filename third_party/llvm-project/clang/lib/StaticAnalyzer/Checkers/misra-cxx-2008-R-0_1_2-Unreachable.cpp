@@ -1,10 +1,23 @@
-//==- misra-cxx-2008-R-0_1_2-Unreachable.cpp - Generalized dead code checker -*- C++ -*-==//
+/*
+NaiveSystems Analyze - A tool for static code analysis
+Copyright (C) 2023  Naive Systems Ltd.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+//=== misra-cxx-2008-R-0_1_2-Unreachable.cpp - Generalized dead code checker ---*- C++ -*-===//
 //
-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-// See https://llvm.org/LICENSE.txt for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//===----------------------------------------------------------------------===//
 // This file implements a generalized unreachable code checker using a
 // path-sensitive analysis. We mark any path visited, and then walk the CFG as a
 // post-analysis to determine what was never visited.
@@ -12,6 +25,7 @@
 // A similar flow-sensitive only check exists in Analysis/ReachableCode.cpp
 // New function in addition to the original checker
 // relaxStdbool
+//
 //===----------------------------------------------------------------------===//
 
 #include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"

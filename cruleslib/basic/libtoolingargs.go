@@ -1,8 +1,19 @@
 /*
-Copyright 2023 Naive Systems Ltd.
+NaiveSystems Analyze - A tool for static code analysis
+Copyright (C) 2023  Naive Systems Ltd.
 
-This software contains information and intellectual property that is
-confidential and proprietary to Naive Systems Ltd. and its affiliates.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 package basic
@@ -39,13 +50,17 @@ const (
 	kMacroArgLimit                      string = "MacroArgLimit"
 	kNestedBlockLimit                   string = "NestedBlockLimit"
 	kNestedIncludeLimit                 string = "NestedIncludeLimit"
+	kIoMIDCharLimit                     string = "IoMIDCharLimit" // IoM: Internal or Macro
+	kNestedCondIncluLimit               string = "NestedCondIncluLimit"
+	kBlockIDLimit                       string = "BlockIDLimit"
 )
 
 var libtoolingExtraArgsMap = map[string][]string{
 	"misra_c_2012/rule_1_1": {kStructMemberLimit, kFunctionParmLimit, kFunctionArgLimit,
 		kNestedRecordLimit, kNestedExprLimit, kSwitchCaseLimit, kEnumConstantLimit,
 		kStringCharLimit, kExternIDLimit, kCaseSensitive, kLimit, kMacroIDLimit,
-		kMacroParmLimit, kMacroArgLimit, kNestedBlockLimit, kNestedIncludeLimit},
+		kMacroParmLimit, kMacroArgLimit, kNestedBlockLimit, kNestedIncludeLimit,
+		kImplicitDecl, kIoMIDCharLimit, kNestedCondIncluLimit, kBlockIDLimit},
 
 	"misra_c_2012/rule_5_1":  {kCaseSensitive, kLimit, kImplicitDecl},
 	"misra_c_2012/rule_13_2": {kAggressiveMode},
@@ -53,7 +68,8 @@ var libtoolingExtraArgsMap = map[string][]string{
 	"misra/rule_1_1": {kStructMemberLimit, kFunctionParmLimit, kFunctionArgLimit,
 		kNestedRecordLimit, kNestedExprLimit, kSwitchCaseLimit, kEnumConstantLimit,
 		kStringCharLimit, kExternIDLimit, kCaseSensitive, kLimit, kMacroIDLimit,
-		kMacroParmLimit, kMacroArgLimit, kNestedBlockLimit, kNestedIncludeLimit},
+		kMacroParmLimit, kMacroArgLimit, kNestedBlockLimit, kNestedIncludeLimit,
+		kImplicitDecl, kIoMIDCharLimit, kNestedCondIncluLimit, kBlockIDLimit},
 
 	"misra/rule_5_1":  {kCaseSensitive, kLimit, kImplicitDecl},
 	"misra/rule_13_2": {kAggressiveMode},

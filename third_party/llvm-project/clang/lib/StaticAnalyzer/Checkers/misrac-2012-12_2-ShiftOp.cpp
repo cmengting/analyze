@@ -1,10 +1,22 @@
-//=== ShiftOp.cpp - shift operation overflow checker ------*- C++ -*--===//
-//
-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-// See https://llvm.org/LICENSE.txt for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//===----------------------------------------------------------------------===//
+/*
+NaiveSystems Analyze - A tool for static code analysis
+Copyright (C) 2023  Naive Systems Ltd.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+//=== misrac-2012-12_2-ShiftOp.cpp - shift operation overflow checker ---*- C++ -*--===//
 //
 // This files defines misrac-2012=ShiftOp Checker, it's modified part of the
 // code of the original CSA undefinedResultChecker.
@@ -14,8 +26,9 @@
 // 1. the RHS should be a constant (can not be negative)
 // 2. LHS should be an unsigned integer
 // 3. the value of RHS should less than the bit width of LHS
-
+//
 //===----------------------------------------------------------------------===//
+
 #include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugType.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"

@@ -1,9 +1,20 @@
 
 /*
-Copyright 2022 Naive Systems Ltd.
+NaiveSystems Analyze - A tool for static code analysis
+Copyright (C) 2023  Naive Systems Ltd.
 
-This software contains information and intellectual property that is
-confidential and proprietary to Naive Systems Ltd. and its affiliates.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #ifndef ANALYZER_LIBTOOLING_INCLUDES_CMD_OPTIONS_H_
@@ -56,6 +67,10 @@ llvm::cl::opt<int> nested_expr_limit(
         "nested parenthesized expression level limit count, default 63"),
     llvm::cl::init(63), llvm::cl::cat(ns_libtooling_checker));
 
+llvm::cl::opt<int> block_id_limit(
+    "BlockIDLimit", llvm::cl::desc("block identifier limit count, default 511"),
+    llvm::cl::init(511), llvm::cl::cat(ns_libtooling_checker));
+
 llvm::cl::opt<int> switch_case_limit(
     "SwitchCaseLimit",
     llvm::cl::desc(
@@ -104,6 +119,18 @@ llvm::cl::opt<int> nested_include_limit(
     "NestedIncludeLimit",
     llvm::cl::desc("nesting level limit count for #include files, default 15"),
     llvm::cl::init(15), llvm::cl::cat(ns_libtooling_checker));
+
+llvm::cl::opt<int> iom_id_char_limit(
+    "IoMIDCharLimit",
+    llvm::cl::desc(
+        "significant initial characters limit count in an internal identifier or a macro name, default 63"),
+    llvm::cl::init(63), llvm::cl::cat(ns_libtooling_checker));
+
+llvm::cl::opt<int> nested_cond_inclu_limit(
+    "NestedCondIncluLimit",
+    llvm::cl::desc(
+        "nesting level limit count of conditional inclusion, default 63"),
+    llvm::cl::init(63), llvm::cl::cat(ns_libtooling_checker));
 
 llvm::cl::opt<bool> aggressive_mode(
     "AggressiveMode",

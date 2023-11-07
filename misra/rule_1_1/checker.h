@@ -1,8 +1,19 @@
 /*
-Copyright 2023 Naive Systems Ltd.
+NaiveSystems Analyze - A tool for static code analysis
+Copyright (C) 2023  Naive Systems Ltd.
 
-This software contains information and intellectual property that is
-confidential and proprietary to Naive Systems Ltd. and its affiliates.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #ifndef ANALYZER_MISRA_rule_1_1_CHECKER_H_
@@ -10,19 +21,26 @@ confidential and proprietary to Naive Systems Ltd. and its affiliates.
 
 #include <clang/ASTMatchers/ASTMatchFinder.h>
 #include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/FrontendAction.h>
 #include <clang/Lex/MacroArgs.h>
-#include <clang/Lex/PPCallbacks.h>
 #include <clang/Tooling/Tooling.h>
+#include <glog/logging.h>
 
+#include "misra/libtooling_utils/libtooling_utils.h"
 #include "misra/proto_util.h"
 
-using analyzer::proto::ResultsList;
 using namespace std;
 using namespace clang;
+using namespace clang::ast_matchers;
+using namespace misra::proto_util;
+using analyzer::proto::ResultsList;
 
 namespace misra {
 namespace rule_1_1 {
+
+struct Identifier {
+  string fullname;
+  SourceLocation loc;
+};
 
 struct LimitList {
   int struct_member_limit;
@@ -39,6 +57,9 @@ struct LimitList {
   int macro_arg_limit;
   int nested_block_limit;
   int nested_include_limit;
+  int iom_id_char_limit;
+  int nested_cond_inclu_limit;
+  int block_id_limit;
 };
 
 class StructMemberCallback;
@@ -51,6 +72,8 @@ class EnumConstantCallback;
 class StringCharCallback;
 class ExternIDCallback;
 class NestedBlockCallback;
+class InternIDCharCallback;
+class BlockIDCallback;
 
 class ASTChecker {
  public:
@@ -70,6 +93,8 @@ class ASTChecker {
   StringCharCallback* string_char_callback_;
   ExternIDCallback* extern_id_callback_;
   NestedBlockCallback* nested_block_callback_;
+  InternIDCharCallback* intern_id_char_callback_;
+  BlockIDCallback* block_id_callback_;
   ast_matchers::MatchFinder finder_;
   ResultsList* results_list_;
 };
@@ -97,10 +122,19 @@ class PPCheck : public PPCallbacks {
   void LexedFileChanged(FileID FID, LexedFileChangeReason Reason,
                         SrcMgr::CharacteristicKind FileType, FileID PrevFID,
                         SourceLocation Loc) override;
+  void If(SourceLocation Loc, SourceRange ConditionRange,
+          ConditionValueKind ConditionValue) override;
+  void Ifdef(SourceLocation Loc, const Token& MacroNameTok,
+             const MacroDefinition& MD) override;
+  void Ifndef(SourceLocation Loc, const Token& MacroNameTok,
+              const MacroDefinition& MD) override;
+  void Endif(SourceLocation Loc, SourceLocation IfLoc) override;
 
  private:
   int include_depth_ = -1;
-  unsigned current_max_level_ = 0;
+  unsigned include_max_depth_ = 0;
+  unsigned cond_inclu_depth_ = 0;
+  unsigned cond_inclu_max_depth_ = 0;
   SourceManager* source_manager_;
   LimitList* limits_;
   ResultsList* results_list_;

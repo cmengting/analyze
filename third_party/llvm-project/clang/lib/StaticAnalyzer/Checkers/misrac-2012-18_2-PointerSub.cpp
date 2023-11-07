@@ -1,10 +1,22 @@
-//=== PointerSubChecker.cpp - Pointer subtraction checker ------*- C++ -*--===//
-//
-// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-// See https://llvm.org/LICENSE.txt for license information.
-// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//===----------------------------------------------------------------------===//
+/*
+NaiveSystems Analyze - A tool for static code analysis
+Copyright (C) 2023  Naive Systems Ltd.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+//=== misrac-2012-18_2-PointerSub.cpp - Pointer subtraction checker ---*- C++ -*--===//
 //
 // This files defines misrac-2012=pointerSub Checker, it's modified on top of
 // the original CSA PointerSubChecker.
@@ -12,6 +24,7 @@
 // rule 18.2:
 // Subtraction between pointers shall only be applied to pointers that address
 // elements of the same array.
+//
 //===----------------------------------------------------------------------===//
 
 #include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
