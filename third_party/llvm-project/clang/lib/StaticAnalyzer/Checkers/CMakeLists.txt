@@ -29,26 +29,6 @@ add_clang_library(clangStaticAnalyzerCheckers
   CloneChecker.cpp
   ContainerModeling.cpp
   ConversionChecker.cpp
-  cwe-120-CStringChecker.cpp
-  cwe-121-ArrayBoundCheckerV2.cpp
-  cwe-124-127-BufferUnderAccessChecker.cpp
-  cwe-126-BuferOverAccessChecker.cpp
-  cwe-131-BufferSizeCalculation.cpp
-  cwe-170-ImproperNullTerminator.cpp
-  cwe-252-UncheckedReturnValue.cpp
-  cwe-253-IncorrectCheckedReturnValue.cpp
-  cwe-273-ImproperCheckForDroppedPrivilegesChecker.cpp
-  cwe-363-LinkFollowingChecker.cpp
-  cwe-369-DivZeroChecker.cpp
-  cwe-456-MissInitChecker.cpp
-  cwe-459-SimpleTempfile.cpp
-  cwe-476-NullPointerDereference.cpp
-  cwe-690-UncheckedReturnPointer.cpp
-  cwe-696-EarlyValidation.cpp
-  cwe-704-MutipleCast.cpp
-  cwe-775-SimpleFileDescriptor.cpp
-  cwe-789-ExcessiveMemoryAllocation.cpp
-  cwe-908-StringPointerUseChecker.cpp
   CXXSelfAssignmentChecker.cpp
   DeadStoresChecker.cpp
   DebugCheckers.cpp
@@ -69,7 +49,6 @@ add_clang_library(clangStaticAnalyzerCheckers
   FuchsiaHandleChecker.cpp
   GCDAntipatternChecker.cpp
   GenericTaintChecker.cpp
-  gjb-5369-5_1_1-JumpOutOfProcedureChecker.cpp
   misra-cxx-2008-R-0_1_2-Unreachable.cpp
   misra-cxx-2008-R-0_1_6-DUDataflow.cpp
   misra-cxx-2008-R-5_2_7-pointerCast.cpp

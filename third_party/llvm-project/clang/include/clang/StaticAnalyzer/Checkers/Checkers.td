@@ -121,27 +121,16 @@ def WebKit : Package<"webkit">;
 def WebKitAlpha : Package<"webkit">, ParentPackage<Alpha>;
 
 def Autosar : Package<"autosar">;
-def CWE : Package<"cwe">;
 def MisraC2012 : Package<"misra_c_2012">;
 def MisraC2012Debug : Package<"debug">, ParentPackage<MisraC2012>;
-def GJB5369 : Package<"gjb5369">;
 def MisraCXX2008 : Package<"misra_cxx_2008">;
 
 def Errno : Package<"errno">, ParentPackage<MisraC2012>;
 
-def GJB8114 : Package<"gjb_8114">;
 
 //===----------------------------------------------------------------------===//
 // Core Checkers.
 //===----------------------------------------------------------------------===//
-
-let ParentPackage = CWE in {
-
-def TaintArgvChecker : Checker<"TaintArgv">,
-  HelpText<"Implementation of CWE-134">,
-  Documentation<NotDocumented>;
-
-}
 
 let ParentPackage = Core in {
 
@@ -502,12 +491,12 @@ def CStringNotNullTerm : Checker<"NotNullTerminated">,
   HelpText<"Check for arguments which are not null-terminating strings">,
   Dependencies<[CStringModeling]>,
   Documentation<HasDocumentation>;
- 
+
 def CStringUninitializedRead : Checker<"UninitializedRead">,
   HelpText<"Checks if the string manipulation function would read uninitialized bytes">,
   Dependencies<[CStringModeling]>,
   Documentation<HasDocumentation>;
-  
+
 } // end "alpha.unix.cstring"
 
 let ParentPackage = Unix in {
@@ -1064,7 +1053,6 @@ def GenericTaintChecker : Checker<"TaintPropagation">,
                   "",
                   InAlpha>,
   ]>,
-  WeakDependencies<[TaintArgvChecker]>,
   Documentation<HasDocumentation>;
 
 } // end "alpha.security.taint"
@@ -1862,6 +1850,17 @@ def TaintMisraChecker : Checker<"TaintMisra">,
   Documentation<NotDocumented>;
 } // end misra_c_2012
 
+let ParentPackage = MisraC2012Debug in {
+
+def CtypeFunctionsTesterChecker : Checker<"CtypeFunctionsTester">,
+  HelpText<"Add test functions to the summary map, so testing of individual "
+           "summary constituents becomes possible.">,
+  // Inherited from the original StdCLibraryFunctionsTesterChecker.
+  Dependencies<[CtypeFunctionsChecker]>,
+  Documentation<NotDocumented>;
+
+} // end misra_c_2012.debug
+
 //===----------------------------------------------------------------------===//
 // misra_cxx_2008 checkers.
 //===----------------------------------------------------------------------===//
@@ -1886,160 +1885,20 @@ def ExceptionThrowChecker: Checker<"ExceptionThrow">,
 } // end misra_cxx_2008
 
 //===----------------------------------------------------------------------===//
-// GJB5369 checkers.
+// AUTOSAR checkers.
 //===----------------------------------------------------------------------===//
 
-let ParentPackage = GJB5369 in {
+let ParentPackage = Autosar in {
 
-def JumpOutOfProcedureChecker : Checker<"JumpOutOfProcedure">,
-  HelpText<"Implementation of gjb5369 rule 5.1.1">,
+def MathErrorChecker : Checker<"MathError">,
+  HelpText<"Implementation of autosar-A0_4_4">,
   Documentation<NotDocumented>;
-} // end gjb5369
+
+} // end Autosar
 
 //===----------------------------------------------------------------------===//
-// CWE checkers.
+// Errno checkers.
 //===----------------------------------------------------------------------===//
-
-let ParentPackage = CWE in {
-
-def CWE120CStringModeling : Checker<"CWE120CStringModeling">,
-  HelpText<"hacked version of CStringModeling">,
-  Dependencies<[CallAndMessageModeling]>,
-  Documentation<NotDocumented>,
-  Hidden;
-
-def CStringInsecureBufferCopy : Checker<"InsecureBufferCopy">,
-  HelpText<"Implementation of CWE-120">,
-  Dependencies<[CWE120CStringModeling]>,
-  Documentation<HasDocumentation>;
-
-def CStringStackBufferOverflow : Checker<"StackBufferOverflow">,
-  HelpText<"Implementation of CWE-121">,
-  Dependencies<[CWE120CStringModeling]>,
-  Documentation<HasDocumentation>;
-
-def CStringHeapBufferOverflow : Checker<"HeapBufferOverflow">,
-  HelpText<"Implementation of CWE-122">,
-  Dependencies<[CWE120CStringModeling]>,
-  Documentation<HasDocumentation>;
-
-def ArrayBoundBase : Checker<"ArrayBoundBase">,
-  HelpText<"hacked version of ArrayBoundCheckerV2">,
-  Documentation<HasDocumentation>,
-  Hidden;
-
-def StackArrayBoundChecker : Checker<"StackArrayBound">,
-  HelpText<"Implementation of CWE-121, stack array bound check">,
-  Dependencies<[ArrayBoundBase]>,
-  Documentation<HasDocumentation>;
-
-def HeapArrayBoundChecker : Checker<"HeapArrayBound">,
-  HelpText<"Implementation of CWE-122, heap array bound check">,
-  Dependencies<[ArrayBoundBase, DynamicMemoryModeling, CStringModeling]>,
-  Documentation<HasDocumentation>;
-
-def BufferUnderwriteChecker : Checker<"BufferUnderwrite">,
-  HelpText<"Implementation of CWE-124">,
-  Documentation<NotDocumented>;
-
-def BufferOverreadChecker : Checker<"BufferOverread">,
-  HelpText<"Implementation of CWE-126">,
-  Documentation<NotDocumented>;
-
-def BufferUnderreadChecker : Checker<"BufferUnderread">,
-  HelpText<"Implementation of CWE-127">,
-  Documentation<NotDocumented>;
-
-def BufferSizeCalculation : Checker<"BufferSizeCalculation">,
-  HelpText<"Implementation of CWE-131">,
-  Documentation<NotDocumented>;
-
-def NullTerminatorChecker : Checker<"NullTerminator">,
-  HelpText<"Implementation of CWE-170">,
-  Dependencies<[DynamicMemoryModeling, CStringModeling]>,
-  Documentation<NotDocumented>;
-
-def UncheckedReturnValueChecker : Checker<"UncheckedReturnValue">,
-  HelpText<"Implementation of CWE-252">,
-  CheckerOptions<[
-    CmdLineOption<String,
-                  "Config",
-                  "Specifies the name of the configuration file.",
-                  "",
-                  InAlpha>,
-  ]>,
-  Documentation<NotDocumented>;
-
-def IncorrectCheckedReturnValueChecker : Checker<"IncorrectCheckedReturnValue">,
-  HelpText<"Implementation of CWE-253">,
-  Documentation<NotDocumented>;
-
-def ImproperCheckForDroppedPrivilegesChecker : Checker<"ImproperCheckForDroppedPrivileges">,
-  HelpText<"Implementation of CWE-273">,
-  Documentation<NotDocumented>;
-
-def LinkFollowingChecker : Checker<"LinkFollowingChecker">,
-  HelpText<"Implementation of CWE-363">,
-  Documentation<NotDocumented>;
-
-def CWEDivZeroChecker : Checker<"DivZero">,
-  HelpText<"Implementation of CWE-369">,
-  Documentation<NotDocumented>;
-
-def MissInitChecker : Checker<"MissInit">,
-  HelpText<"Implementation of CWE-456">,
-  Documentation<NotDocumented>;
-
-def SimpleTempfileChecker : Checker<"SimpleTempfile">,
-  HelpText<"Implementation of CWE-459">,
-  Documentation<NotDocumented>;
-
-def AdditionOfSentinelChecker : Checker<"AdditionOfSentinel">,
-  HelpText<"Implementation of CWE-464">,
-  Documentation<NotDocumented>;
-
-def NullDereferenceChecker : Checker<"NullDereferenceChecker">,
-  HelpText<"Implementation of CWE-476">,
-  CheckerOptions<[
-    CmdLineOption<Boolean,
-                  "SuppressAddressSpaces",
-                  "Suppresses warning when pointer dereferences an address space",
-                  "true",
-                  Released>
-  ]>,
-  Documentation<NotDocumented>;
-
-def UncheckedReturnPointerChecker : Checker<"UncheckedReturnPointer">,
-  HelpText<"Implementation of CWE-690">,
-  Documentation<NotDocumented>;
-
-def EarlyValidationChecker : Checker<"EarlyValidation">,
-  HelpText<"Implementation of CWE-696">,
-  Documentation<NotDocumented>;
-
-def SimpleFileDescriptorChecker : Checker<"SimpleFileDescriptor">,
-  HelpText<"Implementation of CWE-775">,
-  Documentation<NotDocumented>;
-
-def MultipleCastChecker : Checker<"MultipleCast">,
-  HelpText<"Implementation of CWE-704">,
-  Documentation<NotDocumented>;
-
-def ExcessiveMemoryAllocChecker : Checker<"ExcessiveMemoryAllocation">,
-  HelpText<"Implementation of CWE-789">,
-  CheckerOptions<[
-    CmdLineOption<Integer,
-                  "MaximumAllowedSize",
-                  "Specifies the maximum size of memory allocation in MiB.",
-                  "4096",
-                  Released>,
-  ]>,
-  Documentation<NotDocumented>;
-
-def StringPointerUseChecker : Checker<"StringPointerUse">,
-  HelpText<"Implementation of CWE-908">,
-  Documentation<NotDocumented>;
-} // end CWE
 
 let ParentPackage = Errno in {
 
@@ -2064,46 +1923,3 @@ def MisusedTestErrnoMisraChecker : Checker<"MisusedTestErrnoMisra">,
   Documentation<NotDocumented>;
 
 }
-
-let ParentPackage = MisraC2012Debug in {
-
-def CtypeFunctionsTesterChecker : Checker<"CtypeFunctionsTester">,
-  HelpText<"Add test functions to the summary map, so testing of individual "
-           "summary constituents becomes possible.">,
-  // Inherited from the original StdCLibraryFunctionsTesterChecker.
-  Dependencies<[CtypeFunctionsChecker]>,
-  Documentation<NotDocumented>;
-
-} // end misra_c_2012.debug
-
-//===----------------------------------------------------------------------===//
-// GJB 8114 checkers.
-//===----------------------------------------------------------------------===//
-
-let ParentPackage = GJB8114 in {
-
-def NullAfterFreeChecker : Checker<"NullAfterFree">,
-  HelpText<"Implementation of GJB8114 R-1-3-6">,
-  Documentation<NotDocumented>;
-
-def StringEndingChecker : Checker<"StringEnding">,
-  HelpText<"Implementation of GJB8114 R-1-13-16">,
-  CheckerOptions<[
-    CmdLineOption<Integer,
-                  "MaxLen",
-                  "Specifies the maximun lengh of the checked string.",
-                  "2048",
-                  Released>,
-  ]>,
-  Dependencies<[StdCLibraryFunctionsChecker]>,
-  Documentation<NotDocumented>;
-
-} // end gjb_8114
-
-let ParentPackage = Autosar in {
-
-def MathErrorChecker : Checker<"MathError">,
-  HelpText<"Implementation of autosar-A0_4_4">,
-  Documentation<NotDocumented>;
-
-} // end Autosar
