@@ -15,9 +15,9 @@ standards:
 - [AUTOSAR C++14](https://www.autosar.org/fileadmin/standards/R22-11/AP/AUTOSAR_RS_CPP14Guidelines.pdf)
 - [Google C++ Style Guide](https://naive.systems/styleguide/cppguide.html)
 
-The Enterprise Edition supports more recent versions of the above coding
-standards, other C/C++ coding standards including more security-oriented rules
-from CERT and CWE, and many other programming languages.
+The Enterprise Edition supports (a) more recent versions of the above coding
+standards, (b) other C/C++ coding standards including more security-oriented
+rules from CERT and CWE, and (c) many other programming languages.
 
 Refer to our demo repositories (e.g. [analyze-demo](https://github.com/naivesystems/analyze-demo)
 and [googlecpp-demo](https://github.com/naivesystems/googlecpp-demo)) to see how
@@ -36,7 +36,7 @@ For projects using Makefiles, run the commands below in your project root:
 mkdir -p output
 
 podman run --rm \
-  -v $PWD:/src:O
+  -v $PWD:/src:O \
   -v $PWD/.naivesystems:/config:Z \
   -v $PWD/output:/output:Z \
   ccr.ccs.tencentyun.com/naivesystems/analyze:2023.3.0.0 \
