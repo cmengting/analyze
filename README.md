@@ -1,115 +1,132 @@
-# [![N|Solid](https://naivesystems.com/_next/static/media/logo.25b8e43f.png)](https://naivesystems.com/)
+# NaiveSystems Analyze
 
-*Static analysis for code security and compliance*
-
-NaiveSystems Analyze helps you identify issues in your code early and ensure
-compliance with functional safety and coding standards. Get started for free,
-and scale up as needed.
+NaiveSystems Analyze is a static analysis tool for code security and compliance.
+This repository holds the source code for the Community Edition which is free
+and open-source. Contact `hello[AT]naivesystems.com` to learn more about the
+Enterprise Edition.
 
 ## Coding Standards
 
-NaiveSystems Analyze checks code for compliance with a variety of functional
-safety, security, and coding standards, including
+NaiveSystems Analyze Community Edition currently supports the following coding
+standards:
 
-- [Motor Industry Software Reliability Association (MISRA)](https://misra.org.uk/):
-Supports both MISRA C:2012 and MISRA C++:2008, enforce MISRA compliance.
-- [AUTOSAR (AUTomotive Open System ARchitecture)](https://www.autosar.org/):
-Ensures compilance with the AUTOSAR C++14 coding standard.
-- [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html):
-Check your code against Google C++ Style Guide.
+- [MISRA C:2012](https://docs.naivesystems.com/analyze/misrac2012)
+- [MISRA C++:2008](https://docs.naivesystems.com/analyze/misracpp2008)
+- [AUTOSAR C++14](https://www.autosar.org/fileadmin/standards/R22-11/AP/AUTOSAR_RS_CPP14Guidelines.pdf)
+- [Google C++ Style Guide](https://naive.systems/styleguide/cppguide.html)
 
-To specify checking rules based on these coding standards, create a
-`.naivesystems/check_rules` file in your project root directory. Use the
-following format for rule definitions:
+The Enterprise Edition supports more recent versions of the above coding
+standards, other C/C++ coding standards including more security-oriented rules
+from CERT and CWE, and many other programming languages.
 
-- MISRA C:2012: misra_c_2012/dir_1_1 or misra_c_2012/rule_1_1
-- MISRA C++:2008: misra_cpp_2008/rule_0_1_1
-- AUTOSAR: autosar/rule_A0_1_1 or autosar/rule_M0_1_1
-- Google C++ Style Guide: googlecpp/g1149. A table documenting the
-correspondence between the rule IDs and the actual rule texts can be found
-[here](https://github.com/naivesystems/googlecpp/blob/main/google_cpp.check_rules.md).
+Refer to our demo repositories (e.g. [analyze-demo](https://github.com/naivesystems/analyze-demo)
+and [googlecpp-demo](https://github.com/naivesystems/googlecpp-demo)) to see how
+to specify and configure the various coding standards and their rules.
 
-For an example of a `.naivesystems/check_rules` file, refer to
-[here](https://github.com/naivesystems/googlecpp-image/blob/main/google_cpp.check_rules.txt).
+## Getting Started
 
-## How to Use
+You may choose to use the prebuilt container images, GitHub Actions, or build
+directly from the source code.
 
-After setting up your `.naivesystems/check_rules` file, you can use
-NaiveSystems Analyze in the following ways:
+### Using prebuilt container images
 
-### Command Line Interface
+For projects using Makefiles, run the commands below in your project root:
 
-In the root of your project, use the following commands for projects using
-Makefile or CMakeLists.txt:
+```
+mkdir -p output
 
-- For projects using Makefile:
-```sh
-mkdir -p output && \
-podman run -v $PWD:/src:O -v $PWD/.naivesystems:/config:Z \
+podman run --rm \
+  -v $PWD:/src:O
+  -v $PWD/.naivesystems:/config:Z \
   -v $PWD/output:/output:Z \
-  ccr.ccs.tencentyun.com/naivesystems/analyze:2022.1.0.515002 \
+  ccr.ccs.tencentyun.com/naivesystems/analyze:2023.3.0.0 \
   /opt/naivesystems/misra_analyzer -show_results
 ```
 
-- For projects using CMakeLists.txt:
-```sh
-mkdir -p output && \
-podman run -v $PWD:/src:O -v $PWD/.naivesystems:/config:Z \
-  -v $PWD/output:/output:Z \
-  ccr.ccs.tencentyun.com/naivesystems/analyze:2022.1.0.515002 \
-  /opt/naivesystems/misra_analyzer -show_results -project_type=cmake
+A few notes:
+
+* You may use `docker` instead of `podman` here.
+  * Read the wiki to learn more about how to run on
+    [Windows](https://github.com/naivesystems/analyze/wiki/How-to-run-on-Windows)
+    and
+    [macOS](https://github.com/naivesystems/analyze/wiki/How-to-run-on-macOS).
+  * Running on Linux with `podman` is the only officially supported way in the
+    Community Edition.
+
+* You must configure the rules in `.naivesystems/check_rules`.
+  - Refer to
+    [analyze-demo](https://github.com/naivesystems/analyze-demo/blob/master/.naivesystems/check_rules)
+    for an example.
+  - Most (if not all) supported rules are listed in `rulesets/*.check_rules.txt` in this repository.
+
+* You may remove `:Z` if you are not using SELinux.
+
+* Replace `2023.3.0.0` with the actual version that you want to use.
+
+NaiveSystems Analyze can trace and capture your build process automatically.
+Currently we only publish Fedora-based images in the Community Edition, so your
+code must compile successfully under Fedora Linux in order to use the prebuilt
+container images. For other operating systems such as Debian, Ubuntu, CentOS, or
+RHEL, please reach out to us to get the Enterprise Edition.
+
+The analysis results are also available in the `output` directory. You may use
+our [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=naivesystems.analyze)
+to view the results in Visual Studio Code.
+
+In addition to Makefiles, we support many other project types. See also:
+
+* [How to analyze CMake projects](https://github.com/naivesystems/analyze/wiki/How-to-analyze-CMake-projects)
+* [How to analyze Keil MDK projects](https://github.com/naivesystems/analyze/wiki/How-to-analyze-Keil-MDK-projects)
+
+### Using GitHub Actions
+
+NaiveSystems Analyze supports running directly in GitHub Actions. For example,
+[googlecpp-action](https://github.com/naivesystems/googlecpp-action) is our
+officially published action for checking the Google C++ Style Guide. Refer to
+[googlecpp-demo](https://github.com/naivesystems/googlecpp-demo) for more
+information.
+
+### Building from source
+
+To build from source, follow the steps below on Fedora 36 or 37. Other versions
+may also work but are not officially supported in the Community Edition.
+
+1. Install build dependencies
+
+```
+dnf install -y autoconf automake clang cmake libtool lld make python3-devel wget which xz zip
 ```
 
-You can start with the [demo](https://github.com/naivesystems/analyze-demo) as
-a reference.
+2. Install Go 1.18 or later by following [the official instructions](https://go.dev/doc/install).
 
-### Github Actions
+3. Install Bazel 6.0 or later by following [the official instructions](https://bazel.build/install).
 
-NaiveSystems Analyze also support [Github Actions](https://docs.github.com/en/actions)
-for checking your code against Google C++ Style. For more information, please
-refer to the [Demo of Google C++ Style Analysis](https://github.com/naivesystems/googlecpp-demo).
+4. Build the project
 
-
-## How to Build
-
-NaiveSystems Analyze can be built on [Fedora 36](https://docs.fedoraproject.org/en-US/releases/f36/).
-
-1. Install dependencies
-```sh
-dnf update -y && dnf install -y \
-autoconf \
-automake \
-clang \
-cmake \
-libtool \
-lld \
-make \
-npm \
-patch \
-python3 \
-python3-devel \
-wget \
-which \
-xz \
-zip
 ```
-You also need to install [Bazel](https://bazel.build/install?hl=en) and
-[Golang](https://go.dev/).
-
-2. Build the project
-```sh
 make
 ```
 
-3. Build the image
+3. Build a container image
 
-```sh
-cd podman_image && make build-en
 ```
-It will build an image named `naive.systems/analyzer/misra:dev_en` to check
-rules of MISRA C:2012. You can specify other targets if needed.
+make -C podman_image build-en
+```
 
+This will build an image named `naive.systems/analyzer/misra:dev_en` for MISRA
+C:2012. You may specify other targets if needed. Read the code for more details.
+
+NaiveSystems Analyze can be built on a variety of Linux distros. For example,
+the Community Edition in this repository can be built in GitHub Actions with the
+official runner image of Ubuntu 22.04 LTS. For other operating systems such as
+Debian, Ubuntu 18.04/20.04 LTS, CentOS 7/8, or RHEL and its derivatives, please
+reach out to us to get the Enterprise Edition.
 
 ## License
 
-The project is licensed under GNU GENERAL PUBLIC LICENSE.
+The Community Edition of NaiveSystems Analyze is licensed under the GNU General
+Public License version 3. Some subcomponents may have separate licenses. See
+their respective subdirectories in this repository for details.
+
+The Enterprise Edition is offered in separate licenses and terms. Contact us to
+learn more.
