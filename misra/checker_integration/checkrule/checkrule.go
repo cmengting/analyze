@@ -86,6 +86,8 @@ type JSONOption struct {
 	IoMIDCharLimit                     *int     `json:"iom-id-char-limit,omitempty" yaml:"-"`       //misra_c_2012/rule_1_1
 	NestedCondIncluLimit               *int     `json:"nested-cond-inclu-limit,omitempty" yaml:"-"` //misra_c_2012/rule_1_1
 	BlockIDLimit                       *int     `json:"block-id-limit,omitempty" yaml:"-"`          //misra_c_2012/rule_1_1
+	NestedDeclLimit                    *int     `json:"nested-decl-limit,omitempty" yaml:"-"`       //misra_c_2012/rule_1_1
+	ModifyDeclLimit                    *int     `json:"modify-decl-limit,omitempty" yaml:"-"`       //misra_c_2012/rule_1_1
 }
 
 type FilterAndSinkFunc struct {
