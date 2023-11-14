@@ -54,7 +54,7 @@ build-base:
 	cp -r ../third_party/github.com/phodina/ProjectConverter ./tmpWorkSpace
 	cp -r ../third_party/github.com/cpplint/cpplint/cpplint.py ./tmpWorkSpace
 	cp bigmain_symlink ./tmpWorkSpace
-	podman build --cgroup-manager=cgroupfs -f ./Containerfile.misrac100k4 -t $(IMAGE_NAME) ./tmpWorkSpace
+	podman build -f ./Containerfile.misrac100k4 -t $(IMAGE_NAME) ./tmpWorkSpace
 	$(MAKE) clean
 
 .PHONY: build
