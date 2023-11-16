@@ -39,6 +39,7 @@ class Checker {
   ast_matchers::MatchFinder finder_;
   analyzer::proto::ResultsList* results_list_;
 };
+
 }  // namespace libtooling
 }  // namespace rule_4_10_1
 }  // namespace misra_cpp_2008

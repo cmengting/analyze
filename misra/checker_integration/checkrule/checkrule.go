@@ -44,6 +44,7 @@ type JSONOption struct {
 	Limit              *int                   `json:"limit,omitempty" yaml:"-"`
 	Standard           string                 `json:"standard,omitempty" yaml:"-"`
 	MaxLoop            *int                   `json:"max-loop,omitempty" yaml:"-"`
+	MaxNodes           *int                   `json:"max-nodes,omitempty" yaml:"-"`
 	Filters            *FilterAndSinkFuncList `json:"taintFilters,omitempty" yaml:"Filters,omitempty"`
 	Sources            *SourceFuncList        `json:"taintSources,omitempty" yaml:"Propagations,omitempty"`
 	Sinks              *FilterAndSinkFuncList `json:"taintSinks,omitempty" yaml:"Sinks,omitempty"`
@@ -186,6 +187,9 @@ func (jsonOption *JSONOption) Update(newOption JSONOption) {
 	}
 	if newOption.MaxLoop != nil {
 		jsonOption.MaxLoop = newOption.MaxLoop
+	}
+	if newOption.MaxNodes != nil {
+		jsonOption.MaxNodes = newOption.MaxNodes
 	}
 	if newOption.Sinks != nil {
 		jsonOption.Sinks = newOption.Sinks

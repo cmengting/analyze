@@ -25,8 +25,8 @@ namespace libtooling {
 
 int rule_4_10_1(int argc, char** argv);
 
-}
+}  // namespace libtooling
 }  // namespace rule_4_10_1
 }  // namespace misra_cpp_2008
 
-#endif
+#endif  // ANALYZER_MISRA_CPP_2008_RULE_4_10_1_LIBTOOLING_LIB_H_

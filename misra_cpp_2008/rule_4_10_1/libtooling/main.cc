@@ -37,6 +37,7 @@ extern cl::opt<std::string> results_path;
 namespace misra_cpp_2008 {
 namespace rule_4_10_1 {
 namespace libtooling {
+
 int rule_4_10_1(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
   gflags::AllowCommandLineReparsing();
@@ -50,7 +51,7 @@ int rule_4_10_1(int argc, char** argv) {
       libtooling_argc, &const_argv[argc - libtooling_argc],
       ns_libtooling_checker);
   if (!ep) {
-    llvm::errs() << ep.takeError();
+    errs() << ep.takeError();
     return 1;
   }
   tooling::CommonOptionsParser& op = ep.get();
@@ -67,6 +68,7 @@ int rule_4_10_1(int argc, char** argv) {
   }
   return 0;
 }
+
 }  // namespace libtooling
 }  // namespace rule_4_10_1
 }  // namespace misra_cpp_2008
